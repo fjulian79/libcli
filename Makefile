@@ -3,9 +3,10 @@ COMPATIBLE  = cortex-m3
 DEPENDS     = 
 SRCEXT      ?= cpp
 DEFS        =
-INCLUDE     = $(SRCDIR)/include
+WARN_FLAGS  = -Wall
+INCLUDE     = 
 OPT         = -Og
-EXPORT      = include/cli.h
+EXPORT      = cli.h
 
 ###############################################################################
 # Call generic library makefile

@@ -22,8 +22,6 @@ Cli::Cli() :
 
 void Cli::init(cli_cmd_t *p_table, uint8_t size)
 {
-    uint8_t len = 0;
-
     p_cmd_tab=p_table;
     cmd_tab_siz=size;
     reset();
