@@ -89,7 +89,7 @@ int8_t Cli::check_cmd_table(void)
         }
     }
 
-    printf("Unknown command\n");
+    printf("Err: Unknown command\n");
     p_last_cmd=0;
     ret=-2;
 
