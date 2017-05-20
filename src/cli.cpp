@@ -5,6 +5,8 @@
  *      Author: julian
  */
 
+#include <stdio.h>
+
 #include "cli.h"
 
 Cli::Cli() :
@@ -18,7 +20,7 @@ Cli::Cli() :
     /* Nothing more to do */
 }
 
-void Cli::init(timy_sh_cmd_t *p_table, uint8_t size)
+void Cli::init(cli_cmd_t *p_table, uint8_t size)
 {
     uint8_t len = 0;
 
@@ -27,7 +29,7 @@ void Cli::init(timy_sh_cmd_t *p_table, uint8_t size)
     reset();
 }
 
-void Cli::set_cmd_table(timy_sh_cmd_t *p_table, uint8_t size)
+void Cli::set_cmd_table(cli_cmd_t *p_table, uint8_t size)
 {
     p_cmd_tab = p_table;
     cmd_tab_siz = size;
@@ -105,7 +107,7 @@ int8_t Cli::check_cmd_table(void)
     return ret;
 }
 
-bool Cli::check_cmd(timy_sh_cmd_t *p_cmd)
+bool Cli::check_cmd(cli_cmd_t *p_cmd)
 {
     uint8_t i = 0;
 

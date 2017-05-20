@@ -1,7 +1,7 @@
 BINARY      = libcli
 COMPATIBLE  = cortex-m3
 DEPENDS     = 
-SOURCES     = 
+SRCEXT      ?= cpp
 DEFS        =
 INCLUDE     = $(SRCDIR)/include
 OPT         = -Og
