@@ -4,7 +4,7 @@ DEPENDS     =
 SRCEXT      ?= cpp
 DEFS        =
 WARN_FLAGS  = -Wall
-INCLUDE     = 
+INCLUDE     =
 OPT         = -Og
 EXPORT      = cli.h
 
