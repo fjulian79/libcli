@@ -293,6 +293,7 @@ bool Cli::wait_userconfirm(void)
 {
    bool ret = false;
    printf("Press 'y' to confirm... ");
+   cli_fflush();
 
 //   while (!Serial.available());
 //   if (Serial.read() == 'y')
@@ -304,8 +305,9 @@ bool Cli::wait_userconfirm(void)
 
 void Cli::reset(void)
 {
-    buf_idx=0;
-    arg_idx=0;
-    esc=false;
-    printf("#>");
+   buf_idx=0;
+   arg_idx=0;
+   esc=false;
+   printf(CLI_PROMPT);
+   cli_fflush();
 }

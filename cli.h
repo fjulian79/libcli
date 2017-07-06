@@ -12,8 +12,20 @@
 #ifndef CLI_H_
 #define CLI_H_
 
+#include "cli_config.h"
+
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
+
+/**
+ * If the output is buffered fflusch has to be called after printf's without
+ * a new line termination.
+ */
+#if defined CLI_BUFFERED_IO
+#define cli_fflush()        fflush(stdout)
+#else
+#define cli_fflush()
+#endif
 
 /**
  * Used to describe a single command, build a array of this struct to define
@@ -97,23 +109,23 @@ class Cli
         /**
          * Backspace definition
          */
-        static const char del = 0x7F;
+        static const char del = CLI_BACKSPACE;
 
         /**
          * Command escape, used to escape the cmd_term symbol.
          */
-        static const char cmd_esc = '\\';
+        static const char cmd_esc = CLI_ESC;
 
         /**
          * Used to separate commands from arguments and arguments from other
          * arguments.
          */
-        static const char arg_sep = ' ';
+        static const char arg_sep = CLI_ARG_SEP;
 
         /**
-         * Command termination, used to mark the end of a command.
+         *
          */
-        static const char cmd_term = '\r';
+        static const char cmd_term = CLI_TERM;
 
         /**
          * Used to step through the command table.

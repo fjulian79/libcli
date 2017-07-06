@@ -1,6 +1,6 @@
 BINARY      = libcli
 COMPATIBLE  = cortex-m3
-DEPENDS     = 
+DEPENDS     = libconfig
 SRCEXT      ?= cpp
 DEFS        =
 WARN_FLAGS  = -Wall

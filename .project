@@ -3,6 +3,7 @@
 	<name>libcli</name>
 	<comment></comment>
 	<projects>
+		<project>libconfig</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
