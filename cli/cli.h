@@ -18,13 +18,17 @@
 #include <stdint.h>
 
 /**
- * If the output is buffered fflusch has to be called after printf's without
+ * If the output is buffered fflush has to be called after printf's without
  * a new line termination.
  */
-#if defined CLI_BUFFERED_IO
+#ifdef CLI_BUFFERED_IO
+
 #define cli_fflush()        fflush(stdout)
+
 #else
+
 #define cli_fflush()
+
 #endif
 
 /**
@@ -39,7 +43,7 @@ typedef struct
     const char *cmd_text;
 
     /**
-     * Function pointer to be called if the command has been detected 
+     * Function pointer to be called if the command has been detected.
      */
     int8_t (*p_cmd_func)(void *args);
 

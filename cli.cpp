@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-#include "cli.h"
+#include "cli/cli.h"
 
 Cli::Cli() :
      esc(false)
@@ -73,11 +73,18 @@ int8_t Cli::check_cmd_table(void)
         * to check the arguments again.
         */
        arg_idx=0;
+
+#ifdef CLI_PRINTLASTCMD
+       printf("%s\n", buffer);
+#endif
+
        ret=p_last_cmd((void*)&buffer);
        goto out;
     }
     else if (buf_idx == 0)
+    {
        goto out;
+    }
 
     for(i=0; i<cmd_tab_siz; i++)
     {
@@ -89,18 +96,19 @@ int8_t Cli::check_cmd_table(void)
         }
     }
 
-    printf("Err: Unknown command\n");
+    printf("Error, unknown command: %s\n", buffer);
     p_last_cmd=0;
-    ret=-2;
+    ret=INT8_MIN;
+    goto out_2;
 
     out:
-
-    if(ret == -1)
+    if (ret != 0)
     {
-        printf("Command error\n");
+        printf("Error, cmd fails: %d\n", ret);
         p_last_cmd = 0;
     }
 
+    out_2:
     reset();
     return ret;
 }
