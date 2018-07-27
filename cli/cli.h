@@ -5,7 +5,7 @@
  *      Author: julian
  *
  *  Used to provide a tiny shell/command line interface.
- *  Commands are defined by the cli_cmd_t structure, a array
+ *  Commands are defined by the cliCmd_t structure, a array
  *  of this structure shall be passed to the constructor.
  */
 
@@ -45,10 +45,9 @@ typedef struct
     /**
      * Function pointer to be called if the command has been detected.
      */
-    int8_t (*p_cmd_func)(void *args);
+    int8_t (*p_cmd_func)(char *argv[], uint8_t argc);
 
-}cli_cmd_t;
-
+}cliCmd_t;
 
 class Cli
 {
@@ -56,90 +55,121 @@ class Cli
 
         Cli();
 
-        void init(cli_cmd_t* p_table, uint8_t size);
+        void init(cliCmd_t* pTable, uint8_t size);
 
         /**
          * Used to install a new command table.
          */
-        void set_cmd_table(cli_cmd_t* p_table, uint8_t size);
+        void setCmdTable(cliCmd_t* pTable, uint8_t size);
 
         /**
          * Handle a new incoming data byte.
          */
-        int8_t proc_byte(char _data);
+        int8_t procByte(char _data);
 
         /**
-         * Used to get a pointer to the next argument appended the command.
-         * arguments have to separated by a blank, e.g.:
+         * To parse a unsigned value of the given size.
+         * 
+         * @param pArg      The argument string.
+         * @param pData     The variable to write to.
+         * @param siz       The size of the variable.
          *
-         *   test_cmd abc def 123
-         *   |        |   |   +--- arg 3
-         *   |        |   +------- arg 2
-         *   |        +----------- arg 1
-         *   +-------------------- command
+         * @return true     In case of success.
+         * @return false    In case of a error.
+         */
+        bool toUnsigned(char *pArg, void *pData, size_t siz);
+
+        /**
+         * To parse a signed value of the given size.
+         * 
+         * @param pArg      The argument string.
+         * @param pData     The variable to write to.
+         * @param siz       The size of the variable.
          *
-         * Returns a void pointer to the position where the argument starts if
-         * there is one.
+         * @return true     In case of success.
+         * @return false    In case of a error.
          */
-        char* get_parg(void);
-
-        /**
-         * Used to convert the current argument into a 16 bit signed integer.
-         */
-        bool arg2int16(int16_t *p_val);
-
-        /**
-         * Used to convert the current argument into a 16 bit unsigned integer.
-         */
-        bool arg2uint16(uint16_t *p_val);
+        bool toSigned(char *pArg, void *pData, size_t siz);
 
         /**
          * Used to wait for the user pressing any key.
+         * 
+         * TBD
          */
-        bool wait_anykey(void);
+        //bool wait_anykey(void);
 
         /**
          * Wait for user confirmation.
+         * 
+         * TBD
          */
-        bool wait_userconfirm(void);
+        //bool wait_userconfirm(void);
 
     private:
 
         /**
          * Internal constant, buffer size.
          */
-        static const uint8_t max_cmd_len = 100;
+        static const uint8_t MaxCmdLen = 100;
+
+        /**
+         * 
+         */
+        static const uint8_t ArgvSize = CLI_ARGV_SIZ;
 
         /**
          * Backspace definition
          */
-        static const char del = CLI_BACKSPACE;
+        static const char Del = CLI_BACKSPACE;
 
         /**
          * Command escape, used to escape the cmd_term symbol.
          */
-        static const char cmd_esc = CLI_ESC;
+        static const char CmdEsc = CLI_ESC;
 
         /**
          * Used to separate commands from arguments and arguments from other
          * arguments.
          */
-        static const char arg_sep = CLI_ARG_SEP;
+        static const char ArgSep = CLI_ARG_SEP;
 
         /**
-         *
+         * Caracter which is used to mark the begin and the end of a string which
+         * shall be recognized as singe argument althow it contains CLI_ARG_SEP
          */
-        static const char cmd_term = CLI_TERM;
+        static const char StringEsc = CLI_STRING_ESC;
+
+        /**
+         * Character which is used to terminate a line.
+         */
+        static const char CmdTerm = CLI_TERM;
 
         /**
          * Used to step through the command table.
          */
-        int8_t check_cmd_table(void);
+        int8_t checkCmdTable(void);
 
         /**
          * Used to check the for a specific command.
          */
-        bool check_cmd(cli_cmd_t *pcmd);
+        bool checkCmd(cliCmd_t *pCmd);
+
+        /**
+         * Generic parser fpr integer values
+         * 
+         * @param pArg      Start of the argument string
+         * @param pVal      The variable to write to
+         * @param allowHex  set to true if hex values shall be possible.
+         * 
+         * @return true     in case of usccess
+         * @return false    in case of any error
+         */
+        bool parseInt(char *pArg, uint64_t *pVal, bool allowHex);
+
+        /**
+         * Used reset argc and argv
+         */
+        void argReset(void);
 
         /**
          * Used to reset the internal state.
@@ -149,38 +179,46 @@ class Cli
         /**
          * True when the next byte has been escaped.
          */
-        bool esc;
+        bool Esc;
 
         /**
          * Command buffer.
          */
-        char buffer[max_cmd_len];
+        char Buffer[MaxCmdLen];
 
         /**
          * Current position in the buffer.
          */
-        uint8_t buf_idx;
+        uint8_t BufIdx;
 
         /**
-         * Index of the last detected argument.
-         * If zero no argument has been detected.
+         * The argument filed to pass to functins.
+         * 
+         * Limitation: dont want to use malloc, de define the size statically.
+         * This means that the maximum number of arguments is limmited.
+         * Thats Ok for now
          */
-        uint8_t arg_idx;
+        char *Argv[ArgvSize];
+
+        /**
+         * The argument counter.
+         */
+        uint8_t Argc;
 
         /**
          * Pointer to a array of commands.
          */
-        cli_cmd_t* p_cmd_tab;
+        cliCmd_t* pCmdTab;
 
         /**
          * Size of the command array.
          */
-        uint8_t cmd_tab_siz;
+        uint8_t CmdTabSiz;
 
         /**
          * Pointer to the last accepted command.
          */
-        int8_t (*p_last_cmd)(void *args);
+        int8_t (*pLastCmd)(char *argv[], uint8_t argc);
 };
 
 #endif /* CLI_H_ */

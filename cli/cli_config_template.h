@@ -47,6 +47,16 @@ extern "C" {
 #define CLI_ARG_SEP                 ' '
 
 /**
+ * Defines the caracter used for strings with spaces
+ */
+#define CLI_STRING_ESC              '"'
+
+/**
+ * Defines the maximum number of arguments.
+ */
+#define CLI_ARGV_SIZ                4
+
+/**
  * Command termination, used to mark the end of a command.
  */
 #define CLI_TERM                    '\r'

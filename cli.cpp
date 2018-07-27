@@ -6,106 +6,111 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "cli/cli.h"
 
 Cli::Cli() :
-     esc(false)
-   , buf_idx(0)
-   , arg_idx(0)
-   , p_cmd_tab(0)
-   , cmd_tab_siz(0)
-   , p_last_cmd(0)
-{
-    /* Nothing more to do */
+     Esc(false)
+   , BufIdx(0)
+   , Argc(0)
+   , pCmdTab(0)
+   , CmdTabSiz(0)
+   , pLastCmd(0)
+{ 
+    argReset();
 }
 
-void Cli::init(cli_cmd_t *p_table, uint8_t size)
+void Cli::init(cliCmd_t *pTable, uint8_t size)
 {
-    p_cmd_tab=p_table;
-    cmd_tab_siz=size;
+    setCmdTable(pTable, size);
     reset();
 }
 
-void Cli::set_cmd_table(cli_cmd_t *p_table, uint8_t size)
+void Cli::setCmdTable(cliCmd_t *pTable, uint8_t size)
 {
-    p_cmd_tab = p_table;
-    cmd_tab_siz = size;
+    pCmdTab = pTable;
+    CmdTabSiz = size;
 }
 
-int8_t Cli::proc_byte(char data)
+int8_t Cli::procByte(char data)
 {
     int8_t ret=0;
 
-    if (!esc && data == cmd_esc)
+    if (!Esc && data == CmdEsc)
     {
-       esc=true;
+        Esc=true;
     }
-    else if (esc || data != cmd_term)
+    else if (Esc || data != CmdTerm)
     {
-       if (data==del)
-          buf_idx = buf_idx>0 ? buf_idx-1 : 0;
-       else
-          buffer[buf_idx++] = data;
-       esc=false;
+        if (data==Del)
+            BufIdx = BufIdx>0 ? BufIdx-1 : 0;
+        else
+            Buffer[BufIdx++] = data;
+        Esc=false;
     }
-    else if (p_cmd_tab)
+    else if (pCmdTab)
     {
-       if (buf_idx)
-          buffer[buf_idx] = '\0';
-       ret=check_cmd_table();
+        if (BufIdx)
+            Buffer[BufIdx] = '\0';
+        ret=checkCmdTable();
     }
 
-    if (buf_idx == max_cmd_len-1)
-       reset();
+    if (BufIdx == MaxCmdLen-1)
+        reset();
 
     return ret;
 }
 
-int8_t Cli::check_cmd_table(void)
+int8_t Cli::checkCmdTable(void)
 {
     uint8_t i;
     int8_t ret=0;
 
-    if (buf_idx == 0 && p_last_cmd != 0)
+    if (BufIdx == 0 && pLastCmd != 0)
     {
-       /* The argument index has to be set to 0 as it shall be possible
-        * to check the arguments again.
-        */
-       arg_idx=0;
+        Argc=0;
 
 #ifdef CLI_PRINTLASTCMD
-       printf("%s\n", buffer);
+        printf("%s\n", Buffer);
 #endif
 
-       ret=p_last_cmd((void*)&buffer);
-       goto out;
+        ret=pLastCmd(Argv, Argc);
+        goto out;
     }
-    else if (buf_idx == 0)
+    else if (BufIdx == 0)
     {
-       goto out;
+        goto out;
     }
 
-    for(i=0; i<cmd_tab_siz; i++)
+    for(i=0; i<CmdTabSiz; i++)
     {
-        if (check_cmd(&p_cmd_tab[i]))
+        if (checkCmd(&pCmdTab[i]))
         {
-            p_last_cmd=p_cmd_tab[i].p_cmd_func;
-            ret=p_last_cmd((void*)&buffer);
+            if (Argc > ArgvSize)
+            {
+                printf("Error, to mutch arguments (max: %d)\n", ArgvSize);
+                pLastCmd=0;
+                ret=INT8_MIN;
+                goto out_2;
+            }
+
+            pLastCmd=pCmdTab[i].p_cmd_func;
+            ret=pLastCmd(Argv, Argc);
             goto out;
         }
     }
 
-    printf("Error, unknown command: %s\n", buffer);
-    p_last_cmd=0;
+    printf("Error, unknown command: %s\n", Buffer);
+    pLastCmd=0;
     ret=INT8_MIN;
     goto out_2;
 
     out:
     if (ret != 0)
-    {
+    {   
         printf("Error, cmd fails: %d\n", ret);
-        p_last_cmd = 0;
+        pLastCmd = 0;
     }
 
     out_2:
@@ -113,209 +118,208 @@ int8_t Cli::check_cmd_table(void)
     return ret;
 }
 
-bool Cli::check_cmd(cli_cmd_t *p_cmd)
+bool Cli::checkCmd(cliCmd_t *p_cmd)
 {
     uint8_t i = 0;
+    bool string=false;
 
     while (p_cmd->cmd_text[i])
     {
-        if (p_cmd->cmd_text[i] != buffer[i])
+        if (p_cmd->cmd_text[i] != Buffer[i])
             return false;
         i++;
     }
 
-    if (buffer[i] != '\0' && buffer[i] != arg_sep)
-       return false;
+    if (Buffer[i] != '\0' && Buffer[i] != ArgSep)
+        return false;
+    
+    argReset();
+
+    while (Buffer[i] != 0)
+    {
+        if (Buffer[i] == CmdEsc)
+            Esc = true;
+        else if (Esc)
+            continue;
+        else if (Buffer[i] == StringEsc)
+        {
+            string = false;
+            Buffer[i] = 0;
+        }
+        else if ((Buffer[i] == ArgSep) && (string == false))
+        {
+            while (Buffer[i] == ArgSep)
+                i++;
+
+            if (Buffer[i] == CmdTerm || Buffer[i] == '\0')
+            {   
+                break;
+            }
+
+            if (Argc == ArgvSize)
+            {
+                /* violate the limitation to signalize the error */
+                Argc++;
+                break;
+            }
+
+            if (Buffer[i] == StringEsc)
+            {
+                string = true;
+                i++;
+                printf("(%d) 1 string is %d\n", i , string);
+            }
+
+            Buffer[i-1] = 0;
+            Argv[Argc] = &Buffer[i];
+            Argc++;
+        }
+
+        i++;
+    }
+
+    return true;
+}
+
+bool Cli::toSigned(char *pArg, void *pData, size_t siz)
+{
+    bool negative=false;
+    union tmpData
+    {
+        uint64_t u64;
+        uint32_t u32[2];
+        uint16_t u16[4];
+        uint8_t  u8[8];
+    }tmp;
+
+    if (*pArg == '-')
+    {
+        negative=true;
+        pArg++;
+    }
+
+    /* parse as it would be a positive value but dont accept hex valus
+     * when a negitve sign has been found */
+    if (!parseInt(pArg, (uint64_t*) &tmp.u64, !negative))
+        return false;
+
+    if (negative)
+    {
+        /* If negaive sign has been found check if the parsed value
+         * is in the alowed range, abort if not. */
+        if (tmp.u64 & ((uint64_t)UINT64_MAX << ((siz*8)-1)))
+            return false;
+
+        /* convert postive to negative */
+        tmp.u64 = 0 - tmp.u64;
+    }
+
+    if (siz == 1)
+        *((uint8_t*)pData) = tmp.u8[0];
+    else if (siz == 2)
+        *((uint16_t*)pData) = tmp.u16[0];
+    else if (siz == 4)
+        *((uint32_t*)pData) = tmp.u32[0];
+    else if (siz == 8)
+        *((uint64_t*)pData) = tmp.u64;
     else
-       return true;
+        return false;
+
+    return true;
 }
 
-char* Cli::get_parg(void)
+bool Cli::toUnsigned(char *pArg, void *pData, size_t siz)
 {
-   while (buffer[arg_idx] != 0)
-   {
-      if (buffer[arg_idx++] == cmd_esc)
-         esc = true;
-      else if (esc)
-         continue;
-      else if (buffer[arg_idx] == arg_sep)
-      {
-         while (buffer[arg_idx] == arg_sep)
-            arg_idx++;
+    union tmpData
+    {
+        uint64_t u64;
+        uint32_t u32[2];
+        uint16_t u16[4];
+        uint8_t  u8[8];
+    }tmp;
 
-         if (buffer[arg_idx] == cmd_term || buffer[arg_idx] == '\0')
-            break;
+    if (!parseInt(pArg, &tmp.u64, true))
+        return false;
 
-         return &(buffer[arg_idx]);
-      }
-   }
+    if (siz == 1)
+        *((uint8_t*)pData) = tmp.u8[0];
+    else if (siz == 2)
+        *((uint16_t*)pData) = tmp.u16[0];
+    else if (siz == 4)
+        *((uint32_t*)pData) = tmp.u32[0];
+    else if (siz == 8)
+        *((uint64_t*)pData) = tmp.u64;
+    else
+        return false;
 
-   return 0;
+    return true;
 }
 
-bool Cli::arg2int16(int16_t *p_val)
+bool Cli::parseInt(char *pArg, uint64_t *pVal, bool allowHex)
 {
-   bool negative=false;
-   bool hex=false;
-   uint8_t pos=arg_idx;
-   int16_t temp=0;
+    bool hex=false;
+    uint8_t pos=0;
+    uint8_t cnt=0;
 
-   if (arg_idx == 0)
-      return false;
+    *pVal = 0;
 
-   if (buffer[pos] == '+')
-      pos++;
-   else if (buffer[pos] == '-')
-   {
-      negative=true;
-      pos++;
-   }
+    while (   pArg[pos] != ArgSep
+           && pArg[pos] != CmdTerm
+           && pArg[pos] != '\0')
+    {
+        if (*pVal == 0 && pArg[pos] == 'x')
+        {
+            if(!allowHex)
+                return false;
 
-   *p_val=0;
-
-   while (  buffer[pos] != arg_sep
-         && buffer[pos] != cmd_term
-         && buffer[pos] != '\0')
-   {
-      if (*p_val == 0 && buffer[pos] == 'x')
-      {
-         if (negative)
-            return false;
-         else
             hex=true;
-         pos++;
-      }
+            pos++;
+        }
 
-      if (!hex)
-      {
-         if (!(buffer[pos] >= '0' && buffer[pos] <= '9'))
-            return false;
+        if (!hex)
+        {
+            if (!(pArg[pos] >= '0' && pArg[pos] <= '9'))
+                return false;
 
-         if (!negative)
-         {
-            temp=(*p_val*10)+(buffer[pos]-'0');
-            if (temp < *p_val)
-               return false;
-         }
-         else
-         {
-            temp=(*p_val*10)-(buffer[pos]-'0');
-            if (temp > *p_val)
-               return false;
-         }
+            if (((*pVal*10)+(pArg[pos]-'0')) < *pVal)
+                return false;
+            else
+                *pVal=(*pVal*10)+(pArg[pos]-'0');
+        }
+        else
+        {
+            if (cnt > (sizeof(uint64_t)*2)-1)
+                return false;
+            cnt++;
 
-         *p_val=temp;
-      }
-      else
-      {
-         if (temp > (int16_t)sizeof(int16_t)*2)
-            return false;
-         temp++;
+            *pVal = *pVal << 4;
+            if (pArg[pos] >= '0' && pArg[pos] <= '9')
+                *pVal+=pArg[pos]-'0';
+            else if (pArg[pos] >= 'a' && pArg[pos] <= 'f')
+                *pVal+=pArg[pos]-'a'+10;
+            else if (pArg[pos] >= 'A' && pArg[pos] <= 'F')
+                *pVal+=pArg[pos]-'A'+10;
+            else
+                return false;
+        }
 
-         *p_val=*p_val << 4;
+        pos++;
+    }
 
-         if (buffer[pos] >= '0' && buffer[pos] <= '9')
-            *p_val+=buffer[pos]-'0';
-         else if (buffer[pos] >= 'a' && buffer[pos] <= 'f')
-            *p_val+=buffer[pos]-'a'+10;
-         else if (buffer[pos] >= 'A' && buffer[pos] <= 'F')
-            *p_val+=buffer[pos]-'A'+10;
-         else
-            return false;
-      }
-
-      pos++;
-   }
-
-   return true;
+    return true;
 }
 
-bool Cli::arg2uint16(uint16_t *p_val)
+void Cli::argReset(void)
 {
-   bool hex=false;
-   uint8_t pos=arg_idx;
-   uint16_t temp=0;
-
-   if (arg_idx == 0)
-      return false;
-
-   *p_val=0;
-
-   while (  buffer[pos] != arg_sep
-         && buffer[pos] != cmd_term
-         && buffer[pos] != '\0')
-   {
-      if (*p_val == 0 && buffer[pos] == 'x')
-      {
-         hex=true;
-         pos++;
-      }
-
-      if (!hex)
-      {
-         if (!(buffer[pos] >= '0' && buffer[pos] <= '9'))
-            return false;
-
-         temp=(*p_val*10)+(buffer[pos]-'0');
-         if (temp < *p_val)
-            return false;
-
-         *p_val=temp;
-      }
-      else
-      {
-         if (temp > (int16_t)sizeof(int16_t)*2)
-            return false;
-         temp++;
-
-         *p_val=*p_val << 4;
-
-         if (buffer[pos] >= '0' && buffer[pos] <= '9')
-            *p_val+=buffer[pos]-'0';
-         else if (buffer[pos] >= 'a' && buffer[pos] <= 'f')
-            *p_val+=buffer[pos]-'a'+10;
-         else if (buffer[pos] >= 'A' && buffer[pos] <= 'F')
-            *p_val+=buffer[pos]-'A'+10;
-         else
-            return false;
-      }
-
-      pos++;
-   }
-
-   return true;
-}
-
-
-bool Cli::wait_anykey(void)
-{
-   printf("Press any key to continue.\n");
-
-//   while(!Serial.available());
-//   Serial.read();
-
-   return true;
-}
-
-bool Cli::wait_userconfirm(void)
-{
-   bool ret = false;
-   printf("Press 'y' to confirm... ");
-   cli_fflush();
-
-//   while (!Serial.available());
-//   if (Serial.read() == 'y')
-//      ret=true;
-
-   printf("\n");
-   return ret;
+   Argc=0;
+   memset(Argv,0, ArgvSize);
 }
 
 void Cli::reset(void)
 {
-   buf_idx=0;
-   arg_idx=0;
-   esc=false;
-   printf(CLI_PROMPT);
-   cli_fflush();
+    argReset();
+    BufIdx=0;
+    Esc=false;
+    printf(CLI_PROMPT);
+    cli_fflush();
 }
