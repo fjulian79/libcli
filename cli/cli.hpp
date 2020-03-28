@@ -23,7 +23,7 @@
 #ifndef CLI_H_
 #define CLI_H_
 
-#include "cli_config.h"
+#include "cli_config.hpp"
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>

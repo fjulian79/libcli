@@ -1,0 +1,13 @@
+{
+    "name": "libCli",
+    "version": "1.2.2",
+    "keywords": "tty, terminal, command line",
+    "description": "A simple and generic command line interface with a small footprint for bare metal embedded projects.",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/fjulian79/libcli.git"
+    },
+    "frameworks": "*",
+    "platforms": "*"
+  }

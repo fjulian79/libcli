@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cli/cli.h"
+#include "cli/cli.hpp"
 
 Cli::Cli() :
      Esc(false)
