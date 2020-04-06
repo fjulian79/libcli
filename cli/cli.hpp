@@ -94,12 +94,12 @@ class Cli
         /**
          * @brief Defines the size of the internal command buffer.
          */
-        static const uint8_t MaxCmdLen = CLI_BUFFERSIZ;
+        static const uint8_t MaxCmdLen = CLI_COMMANDSIZ;
 
         /**
          * @brief Defines the number of supported arguments.
          */
-        static const uint8_t ArgvSize = CLI_ARGV_SIZ;
+        static const uint8_t ArgvSize = CLI_ARGVSIZ;
 
         /**
          * @brief Definition of the backspace character.
