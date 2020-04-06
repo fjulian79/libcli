@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2015 Julian Friedrich
+ * Copyright (C) 2020 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,32 +29,19 @@
 #include <stdint.h>
 
 /**
- * If the output is buffered fflush has to be called after printf's without
- * a new line termination.
- */
-#ifdef CLI_BUFFERED_IO
-
-#define cli_fflush()        fflush(stdout)
-
-#else
-
-#define cli_fflush()
-
-#endif
-
-/**
- * Used to describe a single command, build a array of this struct to define
- * all supported commands.
+ * @brief Used to describe a single command.
+ * 
+ * Build a array of this struct to define all supported commands.
  */
 typedef struct
 {
     /** 
-     * Command text as entered by the user. 
+     * @brief Command text as entered by the user. 
      */
     const char *cmd_text;
 
     /**
-     * Function pointer to be called if the command has been detected.
+     * @brief Function pointer to be called if the command has been detected.
      */
     int8_t (*p_cmd_func)(char *argv[], uint8_t argc);
 
@@ -69,17 +56,17 @@ class Cli
         void init(cliCmd_t* pTable, uint8_t size);
 
         /**
-         * Used to install a new command table.
+         * @brief Used to install a new command table.
          */
         void setCmdTable(cliCmd_t* pTable, uint8_t size);
 
         /**
-         * Handle a new incoming data byte.
+         * @brief Handle a new incoming data byte.
          */
         int8_t procByte(char _data);
 
         /**
-         * To parse a unsigned value of the given size.
+         * @brief To parse a unsigned value of the given size.
          * 
          * @param pArg      The argument string.
          * @param pData     The variable to write to.
@@ -91,7 +78,7 @@ class Cli
         bool toUnsigned(char *pArg, void *pData, size_t siz);
 
         /**
-         * To parse a signed value of the given size.
+         * @brief To parse a signed value of the given size.
          * 
          * @param pArg      The argument string.
          * @param pData     The variable to write to.
@@ -102,132 +89,123 @@ class Cli
          */
         bool toSigned(char *pArg, void *pData, size_t siz);
 
-        /**
-         * Used to wait for the user pressing any key.
-         * 
-         * TBD
-         */
-        //bool wait_anykey(void);
-
-        /**
-         * Wait for user confirmation.
-         * 
-         * TBD
-         */
-        //bool wait_userconfirm(void);
-
     private:
 
         /**
-         * Internal constant, buffer size.
+         * @brief Defines the size of the internal command buffer.
          */
-        static const uint8_t MaxCmdLen = 100;
+        static const uint8_t MaxCmdLen = CLI_BUFFERSIZ;
 
         /**
-         * 
+         * @brief Defines the number of supported arguments.
          */
         static const uint8_t ArgvSize = CLI_ARGV_SIZ;
 
         /**
-         * Backspace definition
+         * @brief Definition of the backspace character.
          */
-        static const char Del = CLI_BACKSPACE;
+        static const char Del = 0x7F;
 
         /**
-         * Command escape, used to escape the cmd_term symbol.
+         * @brief Definition of the escape character.
          */
-        static const char CmdEsc = CLI_ESC;
+        static const char CmdEsc = 0x1b;
 
         /**
-         * Used to separate commands from arguments and arguments from other
-         * arguments.
+         * @brief Definition of the character used to sepperate 
          */
-        static const char ArgSep = CLI_ARG_SEP;
+        static const char ArgSep = ' ';
 
         /**
-         * Caracter which is used to mark the begin and the end of a string which
-         * shall be recognized as singe argument althow it contains CLI_ARG_SEP
+         * @brief Character which is used to mark the begin and the end of a 
+         * string which shall be recognized as singe argument althow it contains
+         * the character used to sperate arguments.
          */
-        static const char StringEsc = CLI_STRING_ESC;
+        static const char StringEsc = '"';
 
         /**
-         * Character which is used to terminate a line.
+         * @brief Defintion of the character used to terminate a line.
          */
-        static const char CmdTerm = CLI_TERM;
+        static const char CmdTerm = '\r';
 
         /**
-         * Used to step through the command table.
+         * @brief Used to step through the command table.
          */
         int8_t checkCmdTable(void);
 
         /**
-         * Used to check the for a specific command.
+         * @brief Used to check the for a specific command.
+         * 
+         * @param pCmd      Pointer to a command defintion
+         * 
+         * @return true     In case of a positive match. 
+         * @return false    In case of a negative match.
          */
         bool checkCmd(cliCmd_t *pCmd);
 
         /**
-         * Generic parser fpr integer values
+         * @brief Generic parser fpr integer values
          * 
          * @param pArg      Start of the argument string
          * @param pVal      The variable to write to
          * @param allowHex  set to true if hex values shall be possible.
          * 
-         * @return true     in case of usccess
+         * @return true     in case of success
          * @return false    in case of any error
          */
         bool parseInt(char *pArg, uint64_t *pVal, bool allowHex);
 
         /**
-         * Used reset argc and argv
+         * @brief Used reset argc and argv
          */
         void argReset(void);
 
         /**
-         * Used to reset the internal state.
+         * @brief Used to reset the internal state.
          */
         void reset(void);
 
         /**
-         * True when the next byte has been escaped.
+         * @brief True when the escape charater has been detected.
          */
         bool Esc;
 
         /**
-         * Command buffer.
+         * @brief The internal buffer.
          */
         char Buffer[MaxCmdLen];
 
         /**
-         * Current position in the buffer.
+         * @brief Current write position in the internal buffer.
          */
         uint8_t BufIdx;
 
         /**
-         * The argument filed to pass to functins.
+         * @brief The argument filed to be passed to called user functins.
          * 
-         * Limitation: dont want to use malloc, de define the size statically.
-         * This means that the maximum number of arguments is limmited.
-         * Thats Ok for now
+         * Limitation: dont want to use malloc, so define the size statically.
+         * This means that the maximum number of arguments is limited, thats OK 
+         * for now.
          */
         char *Argv[ArgvSize];
 
         /**
-         * The argument counter.
+         * @brief The number of detected arguments.
          */
         uint8_t Argc;
 
         /**
-         * Pointer to a array of commands.
+         * @brief Pointer to a array of user commands.
          */
         cliCmd_t* pCmdTab;
 
         /**
-         * Size of the command array.
+         * @brief Size of the command array.
          */
         uint8_t CmdTabSiz;
 
         /**
-         * Pointer to the last accepted command.
+         * @brief Pointer to the last accepted command.
          */
         int8_t (*pLastCmd)(char *argv[], uint8_t argc);
 };

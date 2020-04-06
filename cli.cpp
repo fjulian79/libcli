@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2015 Julian Friedrich
+ * Copyright (C) 2020 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,20 @@
 #include <string.h>
 
 #include "cli/cli.hpp"
+
+/**
+ * If the output is buffered fflush has to be called after printf's without
+ * a new line termination.
+ */
+#ifdef CLI_BUFFEREDIO
+
+#define cli_fflush()                fflush(stdout)
+
+#else
+
+#define cli_fflush()
+
+#endif
 
 Cli::Cli() :
      Esc(false)

@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2015 Julian Friedrich
+ * Copyright (C) 2020 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,51 +28,37 @@ extern "C" {
 #endif
 
 /**
- * Enable if stdio is buffered.
- * Then flush will be called when needed.
+ * @brief Defines the maximum length of a command including all arguments in 
+ * bytes.
  */
-#define CLI_BUFFERED_IO
+#define CLI_COMMANDSIZ              100
 
 /**
- * Enable if printing the last command is desired in case of repetition.
+ * @brief Defines the maximum number of arguments.
  */
-#define CLI_PRINTLASTCMD
+#define CLI_ARGVSIZ                 4
 
 /**
- * Defines the command line prompt after a new line.
+ * @brief Defines the command line prompt after a new line.
  */
 #define CLI_PROMPT                  "#>"
 
 /**
- * Backspace definition
+ * @brief Enable if stdio is buffered to call fflush(stdout) if needed.
  */
-#define CLI_BACKSPACE               0x7F
+#define CLI_BUFFEREDIO
 
 /**
- * Command escape, used to escape the cmd_term symbol.
+ * @brief Used to enable serial echo.
+ * 
  */
-#define CLI_ESC                     '\\'
+#define CLI_ECHO
 
 /**
- * Separates commands from arguments and arguments from other
- * arguments.
+ * @brief Used to enable printgin the last command when invoked.
  */
-#define CLI_ARG_SEP                 ' '
+#define CLI_PRINTLASTCMD
 
-/**
- * Defines the caracter used for strings with spaces
- */
-#define CLI_STRING_ESC              '"'
-
-/**
- * Defines the maximum number of arguments.
- */
-#define CLI_ARGV_SIZ                4
-
-/**
- * Command termination, used to mark the end of a command.
- */
-#define CLI_TERM                    '\r'
 
 #ifdef __cplusplus
 }
