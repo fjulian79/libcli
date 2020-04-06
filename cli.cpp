@@ -39,6 +39,26 @@
 
 #endif
 
+/**
+ * @brief Defines the sequence to echo in case of a received backspace.
+ */
+#define CLI_ECHO_CSI_K                  "\b\033[K"
+
+/**
+ * @brief Defines the sequence to echo to trigger ther terminal bell.
+ */
+#define CLI_ECHO_BELL                   "\a"
+
+/**
+ * @brief Defines the sequence to echo for a new line.
+ */
+#define CLI_ECHO_NEWLINE                "\n"
+
+/**
+ * @brief Macro to use for terminal echos.
+ */
+#define echo(...)                       printf(__VA_ARGS__)
+
 Cli::Cli() :
      Esc(false)
    , BufIdx(0)
@@ -73,20 +93,42 @@ int8_t Cli::procByte(char data)
     else if (Esc || data != CmdTerm)
     {
         if (data==Del)
-            BufIdx = BufIdx>0 ? BufIdx-1 : 0;
+        {
+            if(BufIdx > 0)
+            {
+                BufIdx--;
+                echo(CLI_ECHO_CSI_K);
+            }
+            else
+            {
+                echo(CLI_ECHO_BELL);
+            }
+        }
         else
-            Buffer[BufIdx++] = data;
+        {
+            if (BufIdx < MaxCmdLen)
+            {
+                Buffer[BufIdx++] = data;
+                echo("%c", data);
+            }
+            else
+            {
+                echo(CLI_ECHO_BELL);
+            }
+        }
+
         Esc=false;
+        cli_fflush();
     }
     else if (pCmdTab)
     {
         if (BufIdx)
+        {
             Buffer[BufIdx] = '\0';
+        }
+        
         ret=checkCmdTable();
     }
-
-    if (BufIdx == MaxCmdLen-1)
-        reset();
 
     return ret;
 }

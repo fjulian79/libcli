@@ -49,12 +49,6 @@ extern "C" {
 #define CLI_BUFFEREDIO
 
 /**
- * @brief Used to enable serial echo.
- * 
- */
-#define CLI_ECHO
-
-/**
  * @brief Used to enable printgin the last command when invoked.
  */
 #define CLI_PRINTLASTCMD
