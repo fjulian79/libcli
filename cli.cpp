@@ -58,10 +58,10 @@ const struct
      * @brief Definition of the character used to sepperate 
      */
     const char argsep = ' ';
-
-/**
- * @brief Defines the sequence to echo to trigger ther terminal bell.
- */
+    
+    /**
+     * @brief Defines the sequence to echo to trigger ther terminal bell.
+     */
     const char bell = '\a';
 
     /**
@@ -84,14 +84,14 @@ const struct
      */    
     const char esc = '\033';
 
-/**
- * @brief Defines the sequence to echo for a new line.
- */
+    /**
+     * @brief Defines the sequence to echo for a new line.
+     */
     const char newline = '\n';
-
-/**
+    
+    /**
      * @brief Defintion of the character used to terminate a line.
- */
+     */
     const char ret = '\r';
 
     /**
@@ -104,7 +104,7 @@ const struct
 }ascii;
 
 Cli::Cli() :
-    EscMode(esc_false)
+     EscMode(esc_false)
    , BufIdx(0)
    , Argc(0)
    , pCmdTab(0)
@@ -148,17 +148,17 @@ int8_t Cli::procByte(char data)
     }
     /* No escape so fat but now DEL received */
     else if ((EscMode == esc_false) && (data == ascii.del))
+    {
+        if(BufIdx > 0)
         {
-            if(BufIdx > 0)
-            {
-                BufIdx--;
+            BufIdx--;
             echo_del();
-            }
-            else
-            {
-            echo(ascii.bell);
-            }
         }
+        else
+        {
+            echo(ascii.bell);
+        }   
+    }
     /* Escape received and now the CSI character */
     else if ((EscMode == esc_true) && (data == ascii.csi))
     {
@@ -167,6 +167,9 @@ int8_t Cli::procByte(char data)
     /* Handle a ANSI escape sequence */
     else if (EscMode == esc_csi)
     {
+        /* See https://vt100.net/docs/vt510-rm/chapter4.html for a list thing 
+         * which could be done here 
+         */
         switch (data)
         {
             case 'A':
@@ -193,25 +196,25 @@ int8_t Cli::procByte(char data)
         EscMode = esc_false;
     }
     /* All special cases processed treat it like data */
+    else 
+    {
+        if (BufIdx < CLI_COMMANDSIZ)
+        {
+            Buffer[BufIdx++] = data;
+            echo(data);
+        }
         else
         {
-        if (BufIdx < CLI_COMMANDSIZ)
-            {
-                Buffer[BufIdx++] = data;
-            echo(data);
-            }
-            else
-            {
             echo(ascii.bell);
-            }
+        }
         
         EscMode = esc_false;
-        }
+    }
 
-        cli_fflush();
+    cli_fflush();
     
     return ret;
-    }
+}
 
 bool Cli::restoreLastCmd(void)
 {
@@ -226,10 +229,10 @@ bool Cli::restoreLastCmd(void)
     BufIdx = strlen(Buffer);
 
     if (BufIdx == 0)
-        {
+    {
         return false;
-        }
-        
+    }
+
     for(i = 0; i < Argc; i++)
     {
         if(StringArg[i] == false)
@@ -252,7 +255,7 @@ bool Cli::restoreLastCmd(void)
 int8_t Cli::checkCmdTable(void)
 {
     uint8_t i = 0;
-    int8_t ret=0;
+    int8_t ret = 0;
 
     if (BufIdx == 0)
     {
@@ -316,7 +319,7 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
     {
         return false;
     }
-    
+        
     argReset();
 
     while (Buffer[i] != 0)
@@ -492,7 +495,7 @@ bool Cli::parseInt(char *pArg, uint64_t *pVal, bool allowHex)
 
 void Cli::argReset(void)
 {
-   Argc=0;
+    Argc=0;
     memset(Argv, 0, sizeof(Argv));
 
     for(uint8_t i = 0; i < CLI_ARGVSIZ; i++)
@@ -503,7 +506,7 @@ void Cli::argReset(void)
 
 void Cli::reset(void)
 {
-    BufIdx=0;
+    BufIdx = 0;
     EscMode = esc_false;
     printf(CLI_PROMPT);
     cli_fflush();
