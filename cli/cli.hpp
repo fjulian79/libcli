@@ -51,8 +51,17 @@ class Cli
 {
     public:
 
+        /**
+         * @brief Construct a new Cli object
+         */
         Cli();
 
+        /**
+         * @brief 
+         * 
+         * @param pTable 
+         * @param size 
+         */
         void init(cliCmd_t* pTable, uint8_t size);
 
         /**
@@ -92,41 +101,9 @@ class Cli
     private:
 
         /**
-         * @brief Defines the size of the internal command buffer.
+         * @brief Used to restore the last valid command in the users terminal.
          */
-        static const uint8_t MaxCmdLen = CLI_COMMANDSIZ;
-
-        /**
-         * @brief Defines the number of supported arguments.
-         */
-        static const uint8_t ArgvSize = CLI_ARGVSIZ;
-
-        /**
-         * @brief Definition of the backspace character.
-         */
-        static const char Del = 0x7F;
-
-        /**
-         * @brief Definition of the escape character.
-         */
-        static const char CmdEsc = 0x1b;
-
-        /**
-         * @brief Definition of the character used to sepperate 
-         */
-        static const char ArgSep = ' ';
-
-        /**
-         * @brief Character which is used to mark the begin and the end of a 
-         * string which shall be recognized as singe argument althow it contains
-         * the character used to sperate arguments.
-         */
-        static const char StringEsc = '"';
-
-        /**
-         * @brief Defintion of the character used to terminate a line.
-         */
-        static const char CmdTerm = '\r';
+        bool restoreLastCmd(void);
 
         /**
          * @brief Used to step through the command table.
@@ -166,14 +143,24 @@ class Cli
         void reset(void);
 
         /**
-         * @brief True when the escape charater has been detected.
+         * @brief Used to represent the states of escaping.
+         * 
+         * esc_false is used as long no escape has been detected.
+         * esc_true is used if a escape character has ben detected.
+         * esc_csi is used when a escape has been followed by a csi character.
          */
-        bool Esc;
+        enum 
+        {
+            esc_false = 0,
+            esc_true = 1, 
+            esc_csi = 2
+        } 
+        EscMode;
 
         /**
          * @brief The internal buffer.
          */
-        char Buffer[MaxCmdLen];
+        char Buffer[CLI_COMMANDSIZ];
 
         /**
          * @brief Current write position in the internal buffer.
@@ -187,7 +174,12 @@ class Cli
          * This means that the maximum number of arguments is limited, thats OK 
          * for now.
          */
-        char *Argv[ArgvSize];
+        char *Argv[CLI_ARGVSIZ];
+
+        /**
+         * @brief States if the particular argument is a sting or not.
+         */
+        bool StringArg[CLI_ARGVSIZ];
 
         /**
          * @brief The number of detected arguments.
@@ -203,11 +195,6 @@ class Cli
          * @brief Size of the command array.
          */
         uint8_t CmdTabSiz;
-
-        /**
-         * @brief Pointer to the last accepted command.
-         */
-        int8_t (*pLastCmd)(char *argv[], uint8_t argc);
 };
 
 #endif /* CLI_H_ */

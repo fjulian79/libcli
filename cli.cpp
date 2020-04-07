@@ -40,32 +40,75 @@
 #endif
 
 /**
- * @brief Defines the sequence to echo in case of a received backspace.
+ * @brief Use for single character terminal echos.
  */
-#define CLI_ECHO_CSI_K                  "\b\033[K"
+#define echo(_val)                      putchar(_val)
+
+/**
+ * @brief Used for echo a delete to the terminal.
+ */
+#define echo_del()                      printf("\b\033[K");
+
+/**
+ * @brief Defines special characters which are used in this context.
+ */
+const struct 
+{
+    /**
+     * @brief Definition of the character used to sepperate 
+     */
+    const char argsep = ' ';
 
 /**
  * @brief Defines the sequence to echo to trigger ther terminal bell.
  */
-#define CLI_ECHO_BELL                   "\a"
+    const char bell = '\a';
+
+    /**
+     * @brief Definition of the backspace character.
+     */
+    const char bs = '\b';
+    
+    /**
+     * @brief Defnition on the csi control sequence character.
+     */
+    const char csi = '[';
+    
+    /**
+     * @brief Definition of the delete character.
+     */
+    const char del = 0x7f;
+
+    /**
+     * @brief Definition of the escape character.
+     */    
+    const char esc = '\033';
 
 /**
  * @brief Defines the sequence to echo for a new line.
  */
-#define CLI_ECHO_NEWLINE                "\n"
+    const char newline = '\n';
 
 /**
- * @brief Macro to use for terminal echos.
+     * @brief Defintion of the character used to terminate a line.
  */
-#define echo(...)                       printf(__VA_ARGS__)
+    const char ret = '\r';
+
+    /**
+     * @brief Character which is used to mark the begin and the end of a 
+     * string which shall be recognized as singe argument althow it contains
+     * the character used to sperate arguments.
+     */    
+    const char stresc = '"';
+
+}ascii;
 
 Cli::Cli() :
-     Esc(false)
+    EscMode(esc_false)
    , BufIdx(0)
    , Argc(0)
    , pCmdTab(0)
    , CmdTabSiz(0)
-   , pLastCmd(0)
 { 
     argReset();
 }
@@ -86,70 +129,132 @@ int8_t Cli::procByte(char data)
 {
     int8_t ret=0;
 
-    if (!Esc && data == CmdEsc)
+    /* No escape so far but ESC received */
+    if ((EscMode == esc_false) && (data == ascii.esc))
     {
-        Esc=true;
+        EscMode = esc_true;
     }
-    else if (Esc || data != CmdTerm)
+    /* No escape so far but comand terminator received */
+    else if ((EscMode == esc_false) && (data == ascii.ret))
     {
-        if (data==Del)
+        echo(ascii.newline);
+        
+        if (BufIdx != 0) 
+        {
+            Buffer[BufIdx] = '\0';
+        }
+
+        ret=checkCmdTable();
+    }
+    /* No escape so fat but now DEL received */
+    else if ((EscMode == esc_false) && (data == ascii.del))
         {
             if(BufIdx > 0)
             {
                 BufIdx--;
-                echo(CLI_ECHO_CSI_K);
+            echo_del();
             }
             else
             {
-                echo(CLI_ECHO_BELL);
+            echo(ascii.bell);
             }
+        }
+    /* Escape received and now the CSI character */
+    else if ((EscMode == esc_true) && (data == ascii.csi))
+    {
+        EscMode = esc_csi;
+    }
+    /* Handle a ANSI escape sequence */
+    else if (EscMode == esc_csi)
+    {
+        switch (data)
+        {
+            case 'A':
+                /* Up Key pressed */
+                restoreLastCmd();
+                break;
+            
+            case 'B':
+                /* Down Key pressed */
+                break;
+            
+            case 'C':
+                /* Right Key pressed */
+                break;
+            
+            case 'D':
+                /* Left Key pressed */
+                break;
+
+            default:
+                break;
+        }
+
+        EscMode = esc_false;
+    }
+    /* All special cases processed treat it like data */
+        else
+        {
+        if (BufIdx < CLI_COMMANDSIZ)
+            {
+                Buffer[BufIdx++] = data;
+            echo(data);
+            }
+            else
+            {
+            echo(ascii.bell);
+            }
+        
+        EscMode = esc_false;
+        }
+
+        cli_fflush();
+    
+    return ret;
+    }
+
+bool Cli::restoreLastCmd(void)
+{
+    uint8_t i = 0;
+
+    if (BufIdx != 0)
+    {
+        return false;
+    }
+
+    /* the buffer still starts with the last command */
+    BufIdx = strlen(Buffer);
+
+    if (BufIdx == 0)
+        {
+        return false;
+        }
+        
+    for(i = 0; i < Argc; i++)
+    {
+        if(StringArg[i] == false)
+        {
+            BufIdx += sprintf(&Buffer[BufIdx],"%c%s", 
+                    ascii.argsep, Argv[i]);
         }
         else
         {
-            if (BufIdx < MaxCmdLen)
-            {
-                Buffer[BufIdx++] = data;
-                echo("%c", data);
-            }
-            else
-            {
-                echo(CLI_ECHO_BELL);
-            }
+            BufIdx += sprintf(&Buffer[BufIdx],"%c\"%s\"", 
+                    ascii.argsep, Argv[i]);
         }
-
-        Esc=false;
-        cli_fflush();
-    }
-    else if (pCmdTab)
-    {
-        if (BufIdx)
-        {
-            Buffer[BufIdx] = '\0';
-        }
-        
-        ret=checkCmdTable();
     }
 
-    return ret;
+    printf("%s", Buffer);
+
+    return true;
 }
 
 int8_t Cli::checkCmdTable(void)
 {
-    uint8_t i;
+    uint8_t i = 0;
     int8_t ret=0;
 
-    if (BufIdx == 0 && pLastCmd != 0)
-    {
-        Argc=0;
-
-#ifdef CLI_PRINTLASTCMD
-        printf("%s\n", Buffer);
-#endif
-
-        ret=pLastCmd(Argv, Argc);
-        goto out;
-    }
-    else if (BufIdx == 0)
+    if (BufIdx == 0)
     {
         goto out;
     }
@@ -158,22 +263,21 @@ int8_t Cli::checkCmdTable(void)
     {
         if (checkCmd(&pCmdTab[i]))
         {
-            if (Argc > ArgvSize)
+            if (Argc > CLI_ARGVSIZ)
             {
-                printf("Error, to mutch arguments (max: %d)\n", ArgvSize);
-                pLastCmd=0;
+                printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
                 ret=INT8_MIN;
                 goto out_2;
             }
 
-            pLastCmd=pCmdTab[i].p_cmd_func;
-            ret=pLastCmd(Argv, Argc);
+            ret=pCmdTab[i].p_cmd_func(Argv, Argc);
             goto out;
         }
     }
 
     printf("Error, unknown command: %s\n", Buffer);
-    pLastCmd=0;
+    /* Setting Buffer[0] to zero prevents printing the invalid command again */
+    Buffer[0] = 0;
     ret=INT8_MIN;
     goto out_2;
 
@@ -181,7 +285,6 @@ int8_t Cli::checkCmdTable(void)
     if (ret != 0)
     {   
         printf("Error, cmd fails: %d\n", ret);
-        pLastCmd = 0;
     }
 
     out_2:
@@ -194,54 +297,61 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
     uint8_t i = 0;
     bool string=false;
 
+    if(!p_cmd->cmd_text[0])
+    {
+        return false;
+    }
+
     while (p_cmd->cmd_text[i])
     {
         if (p_cmd->cmd_text[i] != Buffer[i])
+        {
             return false;
+        }
+            
         i++;
     }
 
-    if (Buffer[i] != '\0' && Buffer[i] != ArgSep)
+    if (Buffer[i] != '\0' && Buffer[i] != ascii.argsep)
+    {
         return false;
+    }
     
     argReset();
 
     while (Buffer[i] != 0)
     {
-        if (Buffer[i] == CmdEsc)
-            Esc = true;
-        else if (Esc)
-            continue;
-        else if (Buffer[i] == StringEsc)
+        if (Buffer[i] == ascii.stresc)
         {
             string = false;
             Buffer[i] = 0;
         }
-        else if ((Buffer[i] == ArgSep) && (string == false))
+        else if ((Buffer[i] == ascii.argsep) && (string == false))
         {
-            while (Buffer[i] == ArgSep)
-                i++;
+            while (Buffer[i] == ascii.argsep)
+            {
+                Buffer[i++] = 0;
+            }
 
-            if (Buffer[i] == CmdTerm || Buffer[i] == '\0')
+            if (Buffer[i] == 0)
             {   
                 break;
             }
 
-            if (Argc == ArgvSize)
+            if (Argc == CLI_ARGVSIZ)
             {
                 /* violate the limitation to signalize the error */
                 Argc++;
                 break;
             }
 
-            if (Buffer[i] == StringEsc)
+            if (Buffer[i] == ascii.stresc)
             {
                 string = true;
-                i++;
-                printf("(%d) 1 string is %d\n", i , string);
+                Buffer[i++] = 0;
+                StringArg[Argc] = true;
             }
 
-            Buffer[i-1] = 0;
             Argv[Argc] = &Buffer[i];
             Argc++;
         }
@@ -334,8 +444,8 @@ bool Cli::parseInt(char *pArg, uint64_t *pVal, bool allowHex)
 
     *pVal = 0;
 
-    while (   pArg[pos] != ArgSep
-           && pArg[pos] != CmdTerm
+    while (   pArg[pos] != ascii.argsep
+           && pArg[pos] != ascii.ret
            && pArg[pos] != '\0')
     {
         if (*pVal == 0 && pArg[pos] == 'x')
@@ -383,14 +493,18 @@ bool Cli::parseInt(char *pArg, uint64_t *pVal, bool allowHex)
 void Cli::argReset(void)
 {
    Argc=0;
-   memset(Argv,0, ArgvSize);
+    memset(Argv, 0, sizeof(Argv));
+
+    for(uint8_t i = 0; i < CLI_ARGVSIZ; i++)
+    {
+        StringArg[i] = false;
+    }
 }
 
 void Cli::reset(void)
 {
-    argReset();
     BufIdx=0;
-    Esc=false;
+    EscMode = esc_false;
     printf(CLI_PROMPT);
     cli_fflush();
 }
