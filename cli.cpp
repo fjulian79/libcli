@@ -75,7 +75,7 @@ const struct
     const char bs = '\b';
     
     /**
-     * @brief Definition of the form feed character.
+     * @brief Definition of the form feed character. Sent in case of ctrl-L.
      */
     const char ff = 0x0c;
 
@@ -156,7 +156,7 @@ int8_t Cli::procByte(char data)
 
         ret=checkCmdTable();
     }
-    /* No escape so fat but now DEL received */
+    /* No escape so far but now DEL received */
     else if ((EscMode == esc_false) && (data == ascii.del))
     {
         if(BufIdx > 0)
@@ -169,6 +169,7 @@ int8_t Cli::procByte(char data)
             echo(ascii.bell);
         }   
     }
+    /* No escape so far but now Form feed has been received. */
     else if ((EscMode == esc_false) && (data == ascii.ff))
     {
         echo_ClearScreen();
