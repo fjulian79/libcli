@@ -50,6 +50,11 @@
 #define echo_del()                      printf("\b\033[K");
 
 /**
+ * @brief Used to clear the screen and rest the cursor to 1:1
+ */
+#define echo_ClearScreen()              printf("\033[2J\033[1;1H");
+
+/**
  * @brief Defines special characters which are used in this context.
  */
 const struct 
@@ -69,6 +74,11 @@ const struct
      */
     const char bs = '\b';
     
+    /**
+     * @brief Definition of the form feed character.
+     */
+    const char ff = 0x0c;
+
     /**
      * @brief Defnition on the csi control sequence character.
      */
@@ -158,6 +168,17 @@ int8_t Cli::procByte(char data)
         {
             echo(ascii.bell);
         }   
+    }
+    else if ((EscMode == esc_false) && (data == ascii.ff))
+    {
+        echo_ClearScreen();
+        printf(CLI_PROMPT);
+
+        if(BufIdx != 0)
+        {
+            Buffer[BufIdx] = '\0';
+            printf("%s", Buffer);
+        }
     }
     /* Escape received and now the CSI character */
     else if ((EscMode == esc_true) && (data == ascii.csi))
