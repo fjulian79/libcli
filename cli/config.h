@@ -23,10 +23,6 @@
 #ifndef CLI_CONFIG_H_
 #define CLI_CONFIG_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef CLI_COMMANDSIZ
 /**
  * @brief Defines the maximum length of a command including all arguments in 
@@ -54,10 +50,6 @@ extern "C" {
  * @brief Enable if stdio is buffered to call fflush(stdout) if needed.
  */
 #define CLI_BUFFEREDIO              0
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* CLI_CONFIG_H_ */
