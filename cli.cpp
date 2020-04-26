@@ -134,7 +134,7 @@ Cli::Cli() :
     argReset();
 }
 
-void Cli::init(cliCmd_t *pTable, uint8_t size)
+void Cli::begin(cliCmd_t *pTable, uint8_t size)
 {
     setCmdTable(pTable, size);
     reset();

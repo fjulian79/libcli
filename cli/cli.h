@@ -66,7 +66,7 @@ class Cli
          * @param pTable 
          * @param size 
          */
-        void init(cliCmd_t* pTable, uint8_t size);
+        void begin(cliCmd_t* pTable, uint8_t size);
 
         /**
          * @brief Used to install a new command table.
