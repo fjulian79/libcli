@@ -23,6 +23,8 @@
 #ifndef CLI_H_
 #define CLI_H_
 
+#include <Arduino.h>
+
 #if __has_include ("cli_config.h")
 #include "cli_config.h"
 #endif
@@ -66,12 +68,17 @@ class Cli
          * @param pTable 
          * @param size 
          */
-        void begin(cliCmd_t* pTable, uint8_t size);
+        void begin(cliCmd_t* pTable, uint8_t size, Stream *pIoStr = &Serial);
 
         /**
-         * @brief Used to install a new command table.
+         * @brief Used to configure the io stream to use.
+         * 
+         * The io stream used per default is the Serial object.
+         * This call can be used if a other stream object shall be used.
+         * 
+         * @param pIoStr Pointer to a Stream based object.
          */
-        void setCmdTable(cliCmd_t* pTable, uint8_t size);
+        void setStream(Stream *pIoStr);
 
         /**
          * @brief Handle a new incoming data byte.
@@ -145,6 +152,11 @@ class Cli
          * @brief Used to reset the internal state.
          */
         void reset(void);
+
+        /**
+         * @brief The stream object to use for io operations.
+         */
+        Stream *pStream;
 
         /**
          * @brief Used to represent the states of escaping.

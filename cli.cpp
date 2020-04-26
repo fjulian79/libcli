@@ -32,7 +32,7 @@
  */
 #if CLI_BUFFEREDIO != 0
 
-#define cli_fflush()                Serial.flush()
+#define cli_fflush()                pStream->flush()
 
 #else
 
@@ -43,7 +43,7 @@
 /**
  * @brief Use for transmit raw bytes without newline at the end.
  */
-#define echo(_val)                      Serial.write(_val)
+#define echo(_val)                      pStream->write(_val)
 
 /**
  * @brief Defines special characters which are used in this context.
@@ -125,7 +125,8 @@ const struct
 }vt100;
 
 Cli::Cli() :
-     EscMode(esc_false)
+     pStream(0)
+   , EscMode(esc_false)
    , BufIdx(0)
    , Argc(0)
    , pCmdTab(0)
@@ -134,16 +135,17 @@ Cli::Cli() :
     argReset();
 }
 
-void Cli::begin(cliCmd_t *pTable, uint8_t size)
-{
-    setCmdTable(pTable, size);
-    reset();
-}
-
-void Cli::setCmdTable(cliCmd_t *pTable, uint8_t size)
+void Cli::begin(cliCmd_t *pTable, uint8_t size, Stream *pIoStr)
 {
     pCmdTab = pTable;
     CmdTabSiz = size;
+    setStream(pIoStr);
+}
+
+void Cli::setStream(Stream *pIoStr)
+{
+    pStream = pIoStr;
+    reset();
 }
 
 int8_t Cli::procByte(char data)
@@ -301,7 +303,7 @@ int8_t Cli::checkCmdTable(void)
         {
             if (Argc > CLI_ARGVSIZ)
             {
-                Serial.printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
+                pStream->printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
                 ret=INT8_MIN;
                 goto out_2;
             }
@@ -311,7 +313,7 @@ int8_t Cli::checkCmdTable(void)
         }
     }
 
-    Serial.printf("Error, unknown command: %s\n", Buffer);
+    pStream->printf("Error, unknown command: %s\n", Buffer);
     /* Setting Buffer[0] to zero prevents printing the invalid command again */
     Buffer[0] = 0;
     ret=INT8_MIN;
@@ -320,7 +322,7 @@ int8_t Cli::checkCmdTable(void)
     out:
     if (ret != 0)
     {   
-        Serial.printf("Error, cmd fails: %d\n", ret);
+        pStream->printf("Error, cmd fails: %d\n", ret);
     }
 
     out_2:
