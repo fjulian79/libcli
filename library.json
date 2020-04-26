@@ -1,13 +1,18 @@
 {
     "name": "libCli",
-    "version": "1.3.0",
+    "version": "2.0.0",
     "keywords": "tty, terminal, command line",
     "description": "A simple and generic command line interface with a small footprint for bare metal embedded projects.",
+    "license": "GPL-3.0",
     "repository":
     {
       "type": "git",
       "url": "https://github.com/fjulian79/libcli.git"
     },
-    "frameworks": "*",
-    "platforms": "*"
+    "frameworks": "arduino",
+    "platforms": 
+    [
+      "ststm32",
+      "espressif8266"
+    ]
   }

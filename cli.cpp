@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <Arduino.h>
 #include "cli/cli.h"
 
 /**
@@ -31,7 +32,7 @@
  */
 #if CLI_BUFFEREDIO != 0
 
-#define cli_fflush()                fflush(stdout)
+#define cli_fflush()                Serial.flush()
 
 #else
 
@@ -40,19 +41,9 @@
 #endif
 
 /**
- * @brief Use for single character terminal echos.
+ * @brief Use for transmit raw bytes without newline at the end.
  */
-#define echo(_val)                      putchar(_val)
-
-/**
- * @brief Used for echo a delete to the terminal.
- */
-#define echo_del()                      printf("\b\033[K");
-
-/**
- * @brief Used to clear the screen and rest the cursor to 1:1
- */
-#define echo_ClearScreen()              printf("\033[2J\033[1;1H");
+#define echo(_val)                      Serial.write(_val)
 
 /**
  * @brief Defines special characters which are used in this context.
@@ -113,6 +104,26 @@ const struct
 
 }ascii;
 
+/**
+ * @brief Defines special vt100 control sequences.
+ * See https://vt100.net/docs/vt510-rm/chapter4.html for details.
+ */
+const struct 
+{
+    /**
+     * @brief Used for echo a delete to the terminal.
+     * Backspace + CSI Ps K
+     */
+    const char del[5] = "\b\033[K";
+
+    /**
+     * @brief Used to clear the screen and rest the cursor to 1:1
+     * ED (Top to bottom) + CUP (line 1, column 1)
+     */
+    const char clrscr[11] = "\033[2J\033[1;1H";
+
+}vt100;
+
 Cli::Cli() :
      EscMode(esc_false)
    , BufIdx(0)
@@ -162,7 +173,7 @@ int8_t Cli::procByte(char data)
         if(BufIdx > 0)
         {
             BufIdx--;
-            echo_del();
+            echo(vt100.del);
         }
         else
         {
@@ -172,13 +183,13 @@ int8_t Cli::procByte(char data)
     /* No escape so far but now Form feed has been received. */
     else if ((EscMode == esc_false) && (data == ascii.ff))
     {
-        echo_ClearScreen();
-        printf(CLI_PROMPT);
+        echo(vt100.clrscr);
+        echo(CLI_PROMPT);
 
         if(BufIdx != 0)
         {
             Buffer[BufIdx] = '\0';
-            printf("%s", Buffer);
+            echo(Buffer);
         }
     }
     /* Escape received and now the CSI character */
@@ -269,8 +280,8 @@ bool Cli::restoreLastCmd(void)
         }
     }
 
-    printf("%s", Buffer);
-
+    echo(Buffer);
+    
     return true;
 }
 
@@ -290,7 +301,7 @@ int8_t Cli::checkCmdTable(void)
         {
             if (Argc > CLI_ARGVSIZ)
             {
-                printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
+                Serial.printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
                 ret=INT8_MIN;
                 goto out_2;
             }
@@ -300,7 +311,7 @@ int8_t Cli::checkCmdTable(void)
         }
     }
 
-    printf("Error, unknown command: %s\n", Buffer);
+    Serial.printf("Error, unknown command: %s\n", Buffer);
     /* Setting Buffer[0] to zero prevents printing the invalid command again */
     Buffer[0] = 0;
     ret=INT8_MIN;
@@ -309,7 +320,7 @@ int8_t Cli::checkCmdTable(void)
     out:
     if (ret != 0)
     {   
-        printf("Error, cmd fails: %d\n", ret);
+        Serial.printf("Error, cmd fails: %d\n", ret);
     }
 
     out_2:
@@ -530,6 +541,6 @@ void Cli::reset(void)
 {
     BufIdx = 0;
     EscMode = esc_false;
-    printf(CLI_PROMPT);
+    echo(CLI_PROMPT);
     cli_fflush();
 }
