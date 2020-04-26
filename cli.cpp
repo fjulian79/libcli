@@ -135,30 +135,33 @@ Cli::Cli() :
     argReset();
 }
 
-void Cli::begin(cliCmd_t *pTable, uint8_t size, Stream *pIoStr)
-{
-    pCmdTab = pTable;
-    CmdTabSiz = size;
-    setStream(pIoStr);
-}
-
 void Cli::setStream(Stream *pIoStr)
 {
     pStream = pIoStr;
     reset();
 }
 
-int8_t Cli::procByte(char data)
+int8_t Cli::read(void)
 {
-    int8_t ret=0;
+    if(pStream->available())
+    {
+        return read(pStream->read());
+    } 
+
+    return 0;
+}
+
+int8_t Cli::read(char byte)
+{
+    int8_t ret = 0;
 
     /* No escape so far but ESC received */
-    if ((EscMode == esc_false) && (data == ascii.esc))
+    if ((EscMode == esc_false) && (byte == ascii.esc))
     {
         EscMode = esc_true;
     }
     /* No escape so far but comand terminator received */
-    else if ((EscMode == esc_false) && (data == ascii.ret))
+    else if ((EscMode == esc_false) && (byte == ascii.ret))
     {
         echo(ascii.newline);
         
@@ -170,7 +173,7 @@ int8_t Cli::procByte(char data)
         ret=checkCmdTable();
     }
     /* No escape so far but now DEL received */
-    else if ((EscMode == esc_false) && (data == ascii.del))
+    else if ((EscMode == esc_false) && (byte == ascii.del))
     {
         if(BufIdx > 0)
         {
@@ -183,7 +186,7 @@ int8_t Cli::procByte(char data)
         }   
     }
     /* No escape so far but now Form feed has been received. */
-    else if ((EscMode == esc_false) && (data == ascii.ff))
+    else if ((EscMode == esc_false) && (byte == ascii.ff))
     {
         echo(vt100.clrscr);
         echo(CLI_PROMPT);
@@ -195,7 +198,7 @@ int8_t Cli::procByte(char data)
         }
     }
     /* Escape received and now the CSI character */
-    else if ((EscMode == esc_true) && (data == ascii.csi))
+    else if ((EscMode == esc_true) && (byte == ascii.csi))
     {
         EscMode = esc_csi;
     }
@@ -205,7 +208,7 @@ int8_t Cli::procByte(char data)
         /* See https://vt100.net/docs/vt510-rm/chapter4.html for a list thing 
          * which could be done here 
          */
-        switch (data)
+        switch (byte)
         {
             case 'A':
                 /* Up Key pressed */
@@ -235,8 +238,8 @@ int8_t Cli::procByte(char data)
     {
         if (BufIdx < CLI_COMMANDSIZ)
         {
-            Buffer[BufIdx++] = data;
-            echo(data);
+            Buffer[BufIdx++] = byte;
+            echo(byte);
         }
         else
         {
@@ -395,134 +398,6 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
         }
 
         i++;
-    }
-
-    return true;
-}
-
-bool Cli::toSigned(char *pArg, void *pData, size_t siz)
-{
-    bool negative=false;
-    union tmpData
-    {
-        uint64_t u64;
-        uint32_t u32[2];
-        uint16_t u16[4];
-        uint8_t  u8[8];
-    }tmp;
-
-    if (*pArg == '-')
-    {
-        negative=true;
-        pArg++;
-    }
-
-    /* parse as it would be a positive value but dont accept hex valus
-     * when a negitve sign has been found */
-    if (!parseInt(pArg, (uint64_t*) &tmp.u64, !negative))
-        return false;
-
-    if (negative)
-    {
-        /* If negaive sign has been found check if the parsed value
-         * is in the alowed range, abort if not. */
-        if (tmp.u64 & ((uint64_t)UINT64_MAX << ((siz*8)-1)))
-            return false;
-
-        /* convert postive to negative */
-        tmp.u64 = 0 - tmp.u64;
-    }
-
-    if (siz == 1)
-        *((uint8_t*)pData) = tmp.u8[0];
-    else if (siz == 2)
-        *((uint16_t*)pData) = tmp.u16[0];
-    else if (siz == 4)
-        *((uint32_t*)pData) = tmp.u32[0];
-    else if (siz == 8)
-        *((uint64_t*)pData) = tmp.u64;
-    else
-        return false;
-
-    return true;
-}
-
-bool Cli::toUnsigned(char *pArg, void *pData, size_t siz)
-{
-    union tmpData
-    {
-        uint64_t u64;
-        uint32_t u32[2];
-        uint16_t u16[4];
-        uint8_t  u8[8];
-    }tmp;
-
-    if (!parseInt(pArg, &tmp.u64, true))
-        return false;
-
-    if (siz == 1)
-        *((uint8_t*)pData) = tmp.u8[0];
-    else if (siz == 2)
-        *((uint16_t*)pData) = tmp.u16[0];
-    else if (siz == 4)
-        *((uint32_t*)pData) = tmp.u32[0];
-    else if (siz == 8)
-        *((uint64_t*)pData) = tmp.u64;
-    else
-        return false;
-
-    return true;
-}
-
-bool Cli::parseInt(char *pArg, uint64_t *pVal, bool allowHex)
-{
-    bool hex=false;
-    uint8_t pos=0;
-    uint8_t cnt=0;
-
-    *pVal = 0;
-
-    while (   pArg[pos] != ascii.argsep
-           && pArg[pos] != ascii.ret
-           && pArg[pos] != '\0')
-    {
-        if (*pVal == 0 && pArg[pos] == 'x')
-        {
-            if(!allowHex)
-                return false;
-
-            hex=true;
-            pos++;
-        }
-
-        if (!hex)
-        {
-            if (!(pArg[pos] >= '0' && pArg[pos] <= '9'))
-                return false;
-
-            if (((*pVal*10)+(pArg[pos]-'0')) < *pVal)
-                return false;
-            else
-                *pVal=(*pVal*10)+(pArg[pos]-'0');
-        }
-        else
-        {
-            if (cnt > (sizeof(uint64_t)*2)-1)
-                return false;
-            cnt++;
-
-            *pVal = *pVal << 4;
-            if (pArg[pos] >= '0' && pArg[pos] <= '9')
-                *pVal+=pArg[pos]-'0';
-            else if (pArg[pos] >= 'a' && pArg[pos] <= 'f')
-                *pVal+=pArg[pos]-'a'+10;
-            else if (pArg[pos] >= 'A' && pArg[pos] <= 'F')
-                *pVal+=pArg[pos]-'A'+10;
-            else
-                return false;
-        }
-
-        pos++;
     }
 
     return true;

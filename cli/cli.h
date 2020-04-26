@@ -63,12 +63,18 @@ class Cli
         Cli();
 
         /**
-         * @brief 
+         * @brief Used to initialize lib cli.
          * 
-         * @param pTable 
+         * @param pTable    
          * @param size 
          */
-        void begin(cliCmd_t* pTable, uint8_t size, Stream *pIoStr = &Serial);
+        template <size_t size>
+        void begin(cliCmd_t (&cmdTab)[size], Stream *pIoStr = &Serial)
+        {
+            pCmdTab = cmdTab;
+            CmdTabSiz = size;
+            setStream(pIoStr);
+        }
 
         /**
          * @brief Used to configure the io stream to use.
@@ -81,43 +87,43 @@ class Cli
         void setStream(Stream *pIoStr);
 
         /**
+         * @brief Checks if data can be read from the stream object. If there 
+         * is data the data will be read from the stream.
+         * 
+         * @return  Zero if no comamnd has been recognized.
+         *          INT8_MIN in case of an parsing related error.
+         *          The return code of the command which has been recognized, 
+         *          zero is expected in case of success.
+         */
+        int8_t read(void);
+
+        /**
          * @brief Handle a new incoming data byte.
-         */
-        int8_t procByte(char _data);
-
-        /**
-         * @brief To parse a unsigned value of the given size.
          * 
-         * @param pArg      The argument string.
-         * @param pData     The variable to write to.
-         * @param siz       The size of the variable.
-         *
-         * @return true     In case of success.
-         * @return false    In case of a error.
+         * @return  Zero if no comamnd has been recognized.
+         *          INT8_MIN in case of an parsing related error.
+         *          The return code of the command which has been recognized, 
+         *          zero is expected in case of success.
          */
-        bool toUnsigned(char *pArg, void *pData, size_t siz);
-
-        /**
-         * @brief To parse a signed value of the given size.
-         * 
-         * @param pArg      The argument string.
-         * @param pData     The variable to write to.
-         * @param siz       The size of the variable.
-         *
-         * @return true     In case of success.
-         * @return false    In case of a error.
-         */
-        bool toSigned(char *pArg, void *pData, size_t siz);
+        int8_t read(char byte);
 
     private:
 
         /**
          * @brief Used to restore the last valid command in the users terminal.
+         * 
+         * @return  true in case of sucess
+         *          false in case of a error.
          */
         bool restoreLastCmd(void);
 
         /**
          * @brief Used to step through the command table.
+         * 
+         * @return  Zero if no comamnd has been recognized.
+         *          INT8_MIN in case of an parsing related error.
+         *          The return code of the command which has been recognized, 
+         *          zero is expected in case of success.
          */
         int8_t checkCmdTable(void);
 
