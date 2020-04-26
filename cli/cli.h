@@ -23,11 +23,11 @@
 #ifndef CLI_H_
 #define CLI_H_
 
-#if __has_include ("cli_config.hpp")
-#include "cli_config.hpp"
-#else
-#include "cli/cli_config_template.hpp"
+#if __has_include ("cli_config.h")
+#include "cli_config.h"
 #endif
+
+#include "cli/config.h"
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>

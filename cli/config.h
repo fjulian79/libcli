@@ -27,32 +27,34 @@
 extern "C" {
 #endif
 
+#ifndef CLI_COMMANDSIZ
 /**
  * @brief Defines the maximum length of a command including all arguments in 
  * bytes.
  */
 #define CLI_COMMANDSIZ              100
+#endif
 
+#ifndef CLI_ARGVSIZ
 /**
  * @brief Defines the maximum number of arguments.
  */
 #define CLI_ARGVSIZ                 4
+#endif
 
+#ifndef CLI_PROMPT
 /**
  * @brief Defines the command line prompt after a new line.
  */
 #define CLI_PROMPT                  "#>"
+#endif
 
+#ifndef CLI_BUFFEREDIO
 /**
  * @brief Enable if stdio is buffered to call fflush(stdout) if needed.
  */
-#define CLI_BUFFEREDIO
-
-/**
- * @brief Used to enable printgin the last command when invoked.
- */
-#define CLI_PRINTLASTCMD
-
+#define CLI_BUFFEREDIO              0
+#endif
 
 #ifdef __cplusplus
 }

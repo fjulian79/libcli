@@ -23,13 +23,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cli/cli.hpp"
+#include "cli/cli.h"
 
 /**
  * If the output is buffered fflush has to be called after printf's without
  * a new line termination.
  */
-#ifdef CLI_BUFFEREDIO
+#if CLI_BUFFEREDIO != 0
 
 #define cli_fflush()                fflush(stdout)
 
