@@ -41,11 +41,6 @@
 #endif
 
 /**
- * @brief Use for transmit raw bytes without newline at the end.
- */
-#define echo(_val)                      pStream->write(_val)
-
-/**
  * @brief Defines special characters which are used in this context.
  */
 const struct 
@@ -111,10 +106,16 @@ const struct
 const struct 
 {
     /**
-     * @brief Used for echo a delete to the terminal.
-     * Backspace + CSI Ps K
+     * @brief Used for echo a single delete to the terminal.
+     * Backspace + CSI Ps K, PS = 0
      */
-    const char del[5] = "\b\033[K";
+    const char del[6] = "\b\033[0K";
+
+    /**
+     * @brief Used for echo a delete line to the terminal.
+     * Carriage Return + CSI Ps K, PS = 2
+     */
+    const char clrline[6] = "\r\033[2K";
 
     /**
      * @brief Used to clear the screen and rest the cursor to 1:1
@@ -131,6 +132,7 @@ Cli::Cli() :
    , Argc(0)
    , pCmdTab(0)
    , CmdTabSiz(0)
+   , EchoEnabled(true)
 { 
     argReset();
 }
@@ -182,20 +184,14 @@ int8_t Cli::read(char byte)
         }
         else
         {
-            echo(ascii.bell);
+            sendBell();
         }   
     }
     /* No escape so far but now Form feed has been received. */
     else if ((EscMode == esc_false) && (byte == ascii.ff))
     {
         echo(vt100.clrscr);
-        echo(CLI_PROMPT);
-
-        if(BufIdx != 0)
-        {
-            Buffer[BufIdx] = '\0';
-            echo(Buffer);
-        }
+        refreshPrompt();
     }
     /* Escape received and now the CSI character */
     else if ((EscMode == esc_true) && (byte == ascii.csi))
@@ -243,7 +239,7 @@ int8_t Cli::read(char byte)
         }
         else
         {
-            echo(ascii.bell);
+            sendBell();
         }
         
         EscMode = esc_false;
@@ -252,6 +248,32 @@ int8_t Cli::read(char byte)
     cli_fflush();
     
     return ret;
+}
+
+void Cli::setEcho(bool state)
+{
+    EchoEnabled = state;
+}
+
+void Cli::sendBell(void)
+{
+    echo(ascii.bell);
+}
+
+void Cli::refreshPrompt(void)
+{
+    if(EchoEnabled == false)
+    {
+        return;
+    }
+
+    echo(CLI_PROMPT);
+    pStream->write(Buffer, BufIdx);
+}
+
+void Cli::clearLine(void)
+{
+    echo(vt100.clrline);
 }
 
 bool Cli::restoreLastCmd(void)
@@ -418,6 +440,6 @@ void Cli::reset(void)
 {
     BufIdx = 0;
     EscMode = esc_false;
-    echo(CLI_PROMPT);
+    refreshPrompt();
     cli_fflush();
 }

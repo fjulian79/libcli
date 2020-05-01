@@ -107,7 +107,48 @@ class Cli
          */
         int8_t read(char byte);
 
+        /**
+         * @brief Turn echo either on or off. If dusabled all kind of echo by 
+         * this library is supressed. Inteded for interaction with a host 
+         * application.
+         * 
+         * @param state 
+         */
+        void setEcho(bool state);
+
+        /**
+         * @brief Send a bell signal to the host termainal.
+         */
+        void sendBell(void);
+
+        /**
+         * @brief Used to refresh the prompt including the current buffer 
+         * content (What the user has typed) in the host termainal.
+         */
+        void refreshPrompt(void);
+
+        /**
+         * @brief Used to clear the current line and move the cursor to the 
+         * first column.
+         */
+        void clearLine(void);
+
     private:
+
+        /**
+         * @brief Use for transmit raw bytes without newline at the end.
+         * 
+         * @tparam T    Can be either a char or a char pointer.
+         * @param data  The data to transmit.
+         */
+        template <typename T> 
+        void echo(T data)
+        {
+            if(EchoEnabled)
+            {
+                pStream->write(data);
+            }
+        }
 
         /**
          * @brief Used to restore the last valid command in the users terminal.
@@ -136,18 +177,6 @@ class Cli
          * @return false    In case of a negative match.
          */
         bool checkCmd(cliCmd_t *pCmd);
-
-        /**
-         * @brief Generic parser fpr integer values
-         * 
-         * @param pArg      Start of the argument string
-         * @param pVal      The variable to write to
-         * @param allowHex  set to true if hex values shall be possible.
-         * 
-         * @return true     in case of success
-         * @return false    in case of any error
-         */
-        bool parseInt(char *pArg, uint64_t *pVal, bool allowHex);
 
         /**
          * @brief Used reset argc and argv
@@ -217,6 +246,11 @@ class Cli
          * @brief Size of the command array.
          */
         uint8_t CmdTabSiz;
+
+        /**
+         * @brief Ehe current echo state.
+         */
+        bool EchoEnabled;
 };
 
 #endif /* CLI_H_ */
