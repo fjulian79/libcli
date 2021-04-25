@@ -20,8 +20,15 @@
  * You can file issues at https://github.com/fjulian79/libcli/issues
  */
 
-#ifndef CLI_CONFIG_H_
-#define CLI_CONFIG_H_
+/**
+ * ATTENTION: This file is the default lib cli configuration and shall serve as
+ * template if a project specific configuration is needed. In this case copt 
+ * the file, rename it to cli_config.h and make it directly available on the 
+ * include path.
+ */
+
+#ifndef CONFIG_H_
+#define CONFIG_H_
 
 #ifndef CLI_COMMANDSIZ
 /**
@@ -52,4 +59,4 @@
 #define CLI_BUFFEREDIO              0
 #endif
 
-#endif /* CLI_CONFIG_H_ */
+#endif /* CONFIG_H_ */
