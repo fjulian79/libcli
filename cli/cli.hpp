@@ -25,11 +25,11 @@
 
 #include <Arduino.h>
 
-#if __has_include ("cli_config.h")
-#include "cli_config.h"
+#if __has_include ("cli_config.hpp")
+#include "cli_config.hpp"
 #endif
 
-#include "cli/config.h"
+#include "cli/config.hpp"
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>

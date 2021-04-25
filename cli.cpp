@@ -24,7 +24,7 @@
 #include <string.h>
 
 #include <Arduino.h>
-#include "cli/cli.h"
+#include "cli/cli.hpp"
 
 /**
  * If the output is buffered fflush has to be called after printf's without
