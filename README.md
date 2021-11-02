@@ -120,10 +120,10 @@ int8_t cmd_help(char *argv[], uint8_t argc)
  */
 cliCmd_t cmdTable[] =
 {
-   {"ver", cmd_ver},
-   {"list", cmd_list},
-   {"bell", cmd_bell},
-   {"help", cmd_help},
+   CLI_CMD_DEF("ver"),              // Use the provided macro ..
+   CLI_CMD_DEF("list"),
+   {"bell", cmd_bell},              // .. or do it on your own if your function
+   {"help", cmd_help},              // names do not match with the commands
 };
 
 void setup()

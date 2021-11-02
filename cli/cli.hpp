@@ -35,6 +35,12 @@
 #include <stdint.h>
 
 /**
+ * @brief Helps to define the taks table by assuming the functions names are 
+ * equal to the command name prefixed with "cmd_"
+ */
+#define CLI_CMD_DEF(_name)              {#_name, cmd_ ## _name}
+
+/**
  * @brief Used to describe a single command.
  * 
  * Build a array of this struct to define all supported commands.
