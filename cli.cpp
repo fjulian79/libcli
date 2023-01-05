@@ -174,8 +174,9 @@ int8_t Cli::read(char byte)
 
         ret=checkCmdTable();
     }
-    /* No escape so far but now DEL received */
-    else if ((EscMode == esc_false) && (byte == ascii.del))
+    /* No escape so far but now DEL or BS received */
+    else if ((EscMode == esc_false) && 
+             ((byte == ascii.del) || (byte == ascii.bs)))
     {
         if(BufIdx > 0)
         {
