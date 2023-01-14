@@ -1,7 +1,7 @@
 # libcli
 A simple and generic command line interface with a small footprint for bare metal embedded projects. 
 
-Never the less it shall provide some convinience features known from Linux shells like command repetition or some vt100 controll sequences. 
+Never the less it shall provide some convenience features known from Linux shells like command repetition or some vt100 control sequences. 
 
 ## Optional configuration file
 Instead of changing settings in cli.h you should add a file called cli_config.h and set the constants to the needed values. Here is a example on how this file might look like:
@@ -33,37 +33,51 @@ Instead of changing settings in cli.h you should add a file called cli_config.h 
 
 #endif /* CLI_CONFIG_H_ */
 ```
-## Supportet comvienence features:
+## Supported convenience features:
 
-### Command repitition
-When pressing the UP key on the keyboard the last command will be recalled. This is comparable with the bash history but there are some limitiations as libcli is made for bare mettal systems and shall have a small footprint:
-* Only the last comamnd can be recalled
+### Command repetition
+When pressing the UP key on the keyboard the last command will be recalled. This is comparable with the bash history but there are some limitations as libcli is made for bare metal systems and shall have a small footprint:
+* Only the last command can be recalled
 * As soon you start typing a new command the last one can no longe be recalled.
 
-In this way no extra buffer for the history is needed. I have allready thought about extending this feature by using the command buffer as some kind of ring buffer and remember the starting point of commands. But this is not implemented yet.
+In this way no extra buffer for the history is needed. I have already thought about extending this feature by using the command buffer as some kind of ring buffer and remember the starting point of commands. But this is not implemented yet.
 
 ### Ring the Bell
-Within your code you can ring the users terminal bell by calling ```sendBell()``` libcli does this wehn:
-* The user want's to delete caracters of his comamnd but there is nothing to delete
-* The maximum command lenght has been reached while typing more text.
+Within your code you can ring the users terminal bell by calling ```sendBell()``` libcli does this when:
+* The user want's to delete characters of his command but there is nothing to delete
+* The maximum command length has been reached while typing more text.
 
 ### Delete a single character
 Just use backspace as usual, it will just work
 See https://vt100.net/docs/vt510-rm/chapter4.html for details.
 
-### Delete a commandline
-Press ```CTRL + L``` and a entire line including the prompt will be removed from your Teminal
+### Delete a command line
+Press ```CTRL + L``` and a entire line including the prompt will be removed from your Terminal
 
 ### Clear the screen
-Press ```CTRL + K``` and a entire screen of your teminal sessions wil be cleared.
+Press ```CTRL + K``` and a entire screen of your terminal sessions wil be cleared.
+
+## Automatic detection of user commands
+
+All you have to do to write a command which is then supported by libcli is to use the provided Macro:
+
+```C
+#define CLI_COMMAND(_name)                                      \
+                                                                \
+    int8_t cmd_ ## _name (char *argv[], uint8_t argc)
+```
+
+At first this macro specifies the function type used to implement commands. But its name is also recognized by a python script which is executed in a pre build script. This script searches for ```CLI_COMMAND(_name_)``` within all cpp files of the current project and uses ```_name_``` as command to type io invoke the corresponding function. This macro is used in the example below. 
+
+If you dont use this macro you have to create your own command table and use it as argument to ```begin()```. Best practice is to start by using the macro as suggested and use the table generated in cmdTable.cpp as example.
 
 ## Example Code
-This is a small example which implements some comamnds, see the help text for more details.
+Below you can find a small example which implements some commands, see the help text for more details. There is also a platformio based demo project: https://github.com/fjulian79/clidemo.git 
 
 ```C
 include <Arduino.h>
-#include "cli/cli.h"
-#include "generic/generic.hpp"
+#include <cli/cli.h>
+#include <generic/generic.hpp>
 
 #include <stdio.h>
 #include <stdint.h>
@@ -72,9 +86,9 @@ include <Arduino.h>
 
 Cli cli;
 
-int8_t cmd_ver(char *argv[], uint8_t argc)
+CLI_COMMAND(ver)
 {
-    Serial.printf("\nclidemo %s Copyright (C) 2020 Julian Friedrich\n", 
+    Serial.printf("\nclidemo %s Copyright (C) 2023 Julian Friedrich\n", 
             VERSIONSTRING);
     Serial.printf("build: %s, %s\n", __DATE__, __TIME__);
     Serial.printf("\n");
@@ -85,7 +99,7 @@ int8_t cmd_ver(char *argv[], uint8_t argc)
     return 0;
 }
 
-int8_t cmd_list(char *argv[], uint8_t argc)
+CLI_COMMAND(list)
 {
     Serial.printf("Recognized arguments:\n");
     for(size_t i = 0; i < argc; i++)
@@ -96,7 +110,7 @@ int8_t cmd_list(char *argv[], uint8_t argc)
     return 0;
 }
 
-int8_t cmd_bell(char *argv[], uint8_t argc)
+CLI_COMMAND(bell)
 {
     cli.sendBell();
     Serial.printf("Sent a bell cmd\n");
@@ -104,7 +118,7 @@ int8_t cmd_bell(char *argv[], uint8_t argc)
     return 0; 
 }
 
-int8_t cmd_help(char *argv[], uint8_t argc)
+CLI_COMMAND(help)
 {
     Serial.printf("Supported commands:\n");
     Serial.printf("  ver         Used to print version infos.\n");
@@ -115,17 +129,6 @@ int8_t cmd_help(char *argv[], uint8_t argc)
     return 0;
 }
 
-/**
- * @brief The table of supported commands.
- */
-cliCmd_t cmdTable[] =
-{
-   CLI_CMD_DEF("ver"),              // Use the provided macro ..
-   CLI_CMD_DEF("list"),
-   {"bell", cmd_bell},              // .. or do it on your own if your function
-   {"help", cmd_help},              // names do not match with the commands
-};
-
 void setup()
 {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -134,7 +137,8 @@ void setup()
     while (!Serial);   
     Serial.println();
     cmd_ver(0, 0);
-    cli.begin(cmdTable);
+    
+    cli.begin();
 }
 
 void loop()
