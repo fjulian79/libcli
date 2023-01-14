@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2020 Julian Friedrich
+ * Copyright (C) 2023 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -143,7 +143,7 @@ void Cli::setStream(Stream *pIoStr)
     reset();
 }
 
-int8_t Cli::read(void)
+int8_t Cli::loop(void)
 {
     if(pStream->available())
     {

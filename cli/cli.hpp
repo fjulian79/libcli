@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2020 Julian Friedrich
+ * Copyright (C) 2023 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,18 @@
 #include <stdint.h>
 
 /**
- * @brief Helps to define the taks table by assuming the functions names are 
- * equal to the command name prefixed with "cmd_"
+ * @brief Used to declare a cli command function. 
+ * 
+ * The name of this macro is used by generateCmdTable.py to find the users
+ * cli command functions and generate a command list within lib cli.
+ */
+#define CLI_COMMAND(_name)                                      \
+                                                                \
+    int8_t cmd_ ## _name (char *argv[], uint8_t argc)
+
+/**
+ * @brief Helps to write the command table based on the defintion in
+ * CLI_COMMAND(_name) above.
  */
 #define CLI_CMD_DEF(_name)              {#_name, cmd_ ## _name}
 
@@ -69,10 +79,18 @@ class Cli
         Cli();
 
         /**
-         * @brief Used to initialize lib cli.
+         * @brief Used to initialize lib cli by using the internal 
+         * automatic generated command table, see README for further infos.
          * 
-         * @param pTable    
-         * @param size 
+         * @param pIoStr Optional, the stream to use for read and write.
+         */
+        void begin(Stream *pIoStr = &Serial);
+
+        /**
+         * @brief Used to initialize lib cli with a given command table
+         * 
+         * @param pTable The comamnd table to use   
+         * @param pIoStr Optional, the stream to use for read and write.
          */
         template <size_t size>
         void begin(cliCmd_t (&cmdTab)[size], Stream *pIoStr = &Serial)
@@ -80,6 +98,18 @@ class Cli
             pCmdTab = cmdTab;
             CmdTabSiz = size;
             setStream(pIoStr);
+        }
+
+        /**
+         * @brief Used to set the command table.
+         * 
+         * @param pTable The comamnd table to use   
+         */
+        template <size_t size>
+        void setCmdTab(cliCmd_t (&cmdTab)[size])
+        {
+            pCmdTab = cmdTab;
+            CmdTabSiz = size;
         }
 
         /**
@@ -93,15 +123,19 @@ class Cli
         void setStream(Stream *pIoStr);
 
         /**
-         * @brief Checks if data can be read from the stream object. If there 
-         * is data the data will be read from the stream.
+         * @brief The function to call in loop()
+         * 
+         * Checks if data can be read from the stream object. If there 
+         * is data the data will be read from the stream. Finally, if a 
+         * command has been detected the corresponding function will be 
+         * called.
          * 
          * @return  Zero if no comamnd has been recognized.
          *          INT8_MIN in case of an parsing related error.
          *          The return code of the command which has been recognized, 
          *          zero is expected in case of success.
          */
-        int8_t read(void);
+        int8_t loop(void);
 
         /**
          * @brief Handle a new incoming data byte.
@@ -114,7 +148,7 @@ class Cli
         int8_t read(char byte);
 
         /**
-         * @brief Turn echo either on or off. If dusabled all kind of echo by 
+         * @brief Turn echo either on or off. If disabled all kind of echo by 
          * this library is supressed. Inteded for interaction with a host 
          * application.
          * 
