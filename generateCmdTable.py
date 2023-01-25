@@ -25,29 +25,47 @@ import time
 import subprocess
 from collections import namedtuple
 
-cwd = os.getcwd()
-targetFileName= cwd + "/cmdTable.cpp"
+def CliCommandsInFolder(searchPath):
+    results = []
 
+    for folder, dirs, files in os.walk(searchPath):
+    
+        if any(key in folder for key in ignoreList):
+            continue
+    
+        for file in files:
+            if file.endswith('.cpp'):
+                fullpath = os.path.join(folder, file)
+                with open(fullpath, 'r') as f:
+                    for line, text in enumerate(f):
+                        match = re.search('^CLI_COMMAND\((.+?)\)', text)
+                        if match:
+                            fileName = os.path.relpath(fullpath, projectPath)
+                            cmdName = match.group(1)
+                            results.append((cmdName, fileName, line))
+    return results
+
+pioEnv = env['PIOENV']
 projectPath = env['PROJECT_DIR']
 projectName = os.path.basename(projectPath)
 
-Command = namedtuple("Command", "file line cmd")
-cmdList = []
+targetFileName= os.getcwd() + "/cmdTable.cpp"
 
-# Search for commands in the entire project
-for folder, dirs, files in os.walk(projectPath):
-    if folder == cwd:
-        continue
-    for file in files:
-        if file.endswith('.cpp'):
-            fullpath = os.path.join(folder, file)
-            with open(fullpath, 'r') as f:
-                for line, text in enumerate(f):
-                    match = re.search('^CLI_COMMAND\((.+?)\)', text)
-                    if match:
-                        filename = os.path.relpath(fullpath, projectPath)
-                        cmd = match.group(1)
-                        cmdList.append(Command(filename, line, cmd))
+ignoreList = [ ".git", ".vscode", "libCli"]
+
+searchList = [
+    projectPath + "/src",
+    projectPath + "/lib",
+    projectPath + "/include",
+    projectPath + "/.pio/libdeps/" + pioEnv
+]
+
+cmdDict = dict()
+
+for path in searchList:
+    for cmd, file, line in CliCommandsInFolder(path):
+        if cmd not in cmdDict:
+            cmdDict[cmd] = (file, line)
 
 # Write the output file
 file = open(targetFileName, "w")
@@ -87,10 +105,10 @@ file.write("""/*
  */
 """)
 
-if len(cmdList) > 0:
-    for item in cmdList:
-        code = "CLI_COMMAND(" + item.cmd + "); "
-        file.write(code.ljust(32, ' ') + "/* Found in " + item.file + " at line " + str(item.line) + " */\n")
+if len(cmdDict) > 0:
+    for cmd in cmdDict:
+        code = "CLI_COMMAND(" + cmd + "); "
+        file.write(code.ljust(32, ' ') + "/* Found in " + cmdDict[cmd][0] + " at line " + str(cmdDict[cmd][1]) + " */\n")
 else:
     file.write("#warning No cli commands found, see libcli README\n")
 
@@ -102,11 +120,11 @@ cliCmd_t cmdTable_generated[] =
 {
 """)
 
-if len(cmdList) > 0:
-    for index, item in enumerate(cmdList):
+if len(cmdDict) > 0:
+    for index, cmd in enumerate(cmdDict):
         if index > 0:
             file.write(",\n")
-        file.write("    CLI_CMD_DEF(" + item.cmd + ")")
+        file.write("    CLI_CMD_DEF(" + cmd + ")")
     index = index + 1
 else:
     file.write("    {0, 0}")
