@@ -62,15 +62,17 @@ searchList = [
 
 cmdDict = dict()
 
-print("Generate libcli command table ... ", end = "")
+print("libcli: Generate libcli command table ...")
 
 for path in searchList:
-    for cmd, file, line in CliCommandsInFolder(path):
+    cmdList = CliCommandsInFolder(path)
+    print("libcli: Found " + str(len(cmdList)) + " commands in " + path)
+    for cmd, file, line in cmdList:
         if cmd not in cmdDict:
             cmdDict[cmd] = (file, line)
 
-print("size: " + str(len(cmdDict)))
-print("Writing " + targetFileName)
+print("libcli: Final table size: " + str(len(cmdDict)))
+print("libcli: Writing " + targetFileName)
 
 # Write the output file
 file = open(targetFileName, "w")
