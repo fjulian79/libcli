@@ -163,7 +163,7 @@ class Cli
 
         /**
          * @brief Used to refresh the prompt including the current buffer 
-         * content (What the user has typed) in the host termainal.
+         * content (What the user has typed) in the host terminal.
          */
         void refreshPrompt(void);
 
@@ -172,6 +172,11 @@ class Cli
          * first column.
          */
         void clearLine(void);
+
+        /**
+         * @brief Used to reset the internal state and print a clean prompt
+         */
+        void reset(void);
 
     private:
 
@@ -222,11 +227,6 @@ class Cli
          * @brief Used reset argc and argv
          */
         void argReset(void);
-
-        /**
-         * @brief Used to reset the internal state.
-         */
-        void reset(void);
 
         /**
          * @brief The stream object to use for io operations.
