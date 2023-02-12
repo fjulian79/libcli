@@ -147,3 +147,5 @@ void Cli::begin(Stream *pIoStr)
     setStream(pIoStr);
 }
 """)
+
+file.close()
