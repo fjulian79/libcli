@@ -334,7 +334,7 @@ int8_t Cli::checkCmdTable(void)
                 goto out_2;
             }
 
-            ret=pCmdTab[i].p_cmd_func(Argv, Argc);
+            ret=pCmdTab[i].p_cmd_func((const char **)Argv, Argc);
             goto out;
         }
     }

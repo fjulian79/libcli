@@ -42,7 +42,7 @@
  */
 #define CLI_COMMAND(_name)                                      \
                                                                 \
-    int8_t cmd_ ## _name (char *argv[], uint8_t argc)
+    int8_t cmd_ ## _name (const char *argv[], uint8_t argc)
 
 /**
  * @brief Helps to write the command table based on the defintion in
@@ -65,7 +65,7 @@ typedef struct
     /**
      * @brief Function pointer to be called if the command has been detected.
      */
-    int8_t (*p_cmd_func)(char *argv[], uint8_t argc);
+    int8_t (*p_cmd_func)(const char *argv[], uint8_t argc);
 
 }cliCmd_t;
 
