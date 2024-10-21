@@ -145,7 +145,7 @@ void Cli::setStream(Stream *pIoStr)
 
 int8_t Cli::loop(void)
 {
-    if(pStream->available())
+    if(pStream && pStream->available())
     {
         return read(pStream->read());
     } 
@@ -165,7 +165,10 @@ int8_t Cli::read(char byte)
     /* No escape so far but comand terminator received */
     else if ((EscMode == esc_false) && (byte == ascii.ret))
     {
-        echo(ascii.newline);
+        if(EchoEnabled)
+        {
+            pStream->write(ascii.newline);
+        }
         
         if (BufIdx != 0) 
         {
@@ -181,7 +184,10 @@ int8_t Cli::read(char byte)
         if(BufIdx > 0)
         {
             BufIdx--;
-            echo(vt100.del);
+            if(EchoEnabled)
+            {
+                pStream->write(vt100.del);
+            }
         }
         else
         {
@@ -191,7 +197,7 @@ int8_t Cli::read(char byte)
     /* No escape so far but now Form feed has been received. */
     else if ((EscMode == esc_false) && (byte == ascii.ff))
     {
-        echo(vt100.clrscr);
+        pStream->write(vt100.clrscr);
         refreshPrompt();
     }
     /* Escape received and now the CSI character */
@@ -233,10 +239,17 @@ int8_t Cli::read(char byte)
     /* All special cases processed treat it like data */
     else 
     {
-        if (BufIdx < CLI_COMMANDSIZ)
+        if (BufIdx == 0 && byte == ascii.newline)
+        {
+            /* Ignore the new line of a \r\n combination */
+        }
+        else if ( BufIdx < CLI_COMMANDSIZ)
         {
             Buffer[BufIdx++] = byte;
-            echo(byte);
+            if(EchoEnabled)
+            {
+                pStream->write(byte);
+            }
         }
         else
         {
@@ -258,23 +271,18 @@ void Cli::setEcho(bool state)
 
 void Cli::sendBell(void)
 {
-    echo(ascii.bell);
+    pStream->write(ascii.bell);
 }
 
 void Cli::refreshPrompt(void)
 {
-    if(EchoEnabled == false)
-    {
-        return;
-    }
-
-    echo(CLI_PROMPT);
+    pStream->write(CLI_PROMPT);
     pStream->write(Buffer, BufIdx);
 }
 
 void Cli::clearLine(void)
 {
-    echo(vt100.clrline);
+    pStream->write(vt100.clrline);
 }
 
 bool Cli::restoreLastCmd(void)
@@ -308,7 +316,7 @@ bool Cli::restoreLastCmd(void)
         }
     }
 
-    echo(Buffer);
+    pStream->write(Buffer);
     
     return true;
 }
@@ -334,7 +342,7 @@ int8_t Cli::checkCmdTable(void)
                 goto out_2;
             }
 
-            ret=pCmdTab[i].p_cmd_func((const char **)Argv, Argc);
+            ret=pCmdTab[i].p_cmd_func(*pStream, (const char **)Argv, Argc);
             goto out;
         }
     }

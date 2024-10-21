@@ -142,6 +142,7 @@ file.write("""
 
 void Cli::begin(Stream *pIoStr)
 {
+    BufIdx = 0;
     pCmdTab = cmdTable_generated;
     CmdTabSiz = """ + str(index) + """;
     setStream(pIoStr);

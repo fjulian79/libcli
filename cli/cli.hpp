@@ -42,7 +42,7 @@
  */
 #define CLI_COMMAND(_name)                                      \
                                                                 \
-    int8_t cmd_ ## _name (const char *argv[], uint8_t argc)
+    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
 
 /**
  * @brief Helps to write the command table based on the defintion in
@@ -65,7 +65,7 @@ typedef struct
     /**
      * @brief Function pointer to be called if the command has been detected.
      */
-    int8_t (*p_cmd_func)(const char *argv[], uint8_t argc);
+    int8_t (*p_cmd_func)(Stream& ioStream, const char *argv[], uint8_t argc);
 
 }cliCmd_t;
 
@@ -95,6 +95,7 @@ class Cli
         template <size_t size>
         void begin(cliCmd_t (&cmdTab)[size], Stream *pIoStr = &Serial)
         {
+            BufIdx = 0;
             pCmdTab = cmdTab;
             CmdTabSiz = size;
             setStream(pIoStr);
@@ -179,21 +180,6 @@ class Cli
         void reset(void);
 
     private:
-
-        /**
-         * @brief Use for transmit raw bytes without newline at the end.
-         * 
-         * @tparam T    Can be either a char or a char pointer.
-         * @param data  The data to transmit.
-         */
-        template <typename T> 
-        void echo(T data)
-        {
-            if(EchoEnabled)
-            {
-                pStream->write(data);
-            }
-        }
 
         /**
          * @brief Used to restore the last valid command in the users terminal.
