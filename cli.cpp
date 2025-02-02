@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2023 Julian Friedrich
+ * Copyright (C) 2025 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -342,7 +342,7 @@ int8_t Cli::checkCmdTable(void)
                 goto out_2;
             }
 
-            ret=pCmdTab[i].p_cmd_func(*pStream, (const char **)Argv, Argc);
+            ret=pCmdTab[i].pfunc(*pStream, (const char **)Argv, Argc);
             goto out;
         }
     }
@@ -369,14 +369,14 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
     uint8_t i = 0;
     bool string=false;
 
-    if(!p_cmd->cmd_text[0])
+    if(!p_cmd->name[0])
     {
         return false;
     }
 
-    while (p_cmd->cmd_text[i])
+    while (p_cmd->name[i])
     {
-        if (p_cmd->cmd_text[i] != Buffer[i])
+        if (p_cmd->name[i] != Buffer[i])
         {
             return false;
         }

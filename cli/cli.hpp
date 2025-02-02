@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2023 Julian Friedrich
+ * Copyright (C) 2025 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,46 +28,12 @@
 #if __has_include ("cli_config.hpp")
 #include "cli_config.hpp"
 #endif
-
 #include "cli/config.hpp"
+
+#include "cli/command.hpp"
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
-
-/**
- * @brief Used to declare a cli command function. 
- * 
- * The name of this macro is used by generateCmdTable.py to find the users
- * cli command functions and generate a command list within lib cli.
- */
-#define CLI_COMMAND(_name)                                      \
-                                                                \
-    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
-
-/**
- * @brief Helps to write the command table based on the defintion in
- * CLI_COMMAND(_name) above.
- */
-#define CLI_CMD_DEF(_name)              {#_name, cmd_ ## _name}
-
-/**
- * @brief Used to describe a single command.
- * 
- * Build a array of this struct to define all supported commands.
- */
-typedef struct
-{
-    /** 
-     * @brief Command text as entered by the user. 
-     */
-    const char *cmd_text;
-
-    /**
-     * @brief Function pointer to be called if the command has been detected.
-     */
-    int8_t (*p_cmd_func)(Stream& ioStream, const char *argv[], uint8_t argc);
-
-}cliCmd_t;
 
 class Cli
 {
@@ -79,38 +45,24 @@ class Cli
         Cli();
 
         /**
-         * @brief Used to initialize lib cli by using the internal 
-         * automatic generated command table, see README for further infos.
+         * @brief Used to initialize lib cli by using the automatic generated 
+         * command table, see README for further infos.
          * 
          * @param pIoStr Optional, the stream to use for read and write.
          */
-        void begin(Stream *pIoStr = &Serial);
-
-        /**
-         * @brief Used to initialize lib cli with a given command table
-         * 
-         * @param pTable The comamnd table to use   
-         * @param pIoStr Optional, the stream to use for read and write.
-         */
-        template <size_t size>
-        void begin(cliCmd_t (&cmdTab)[size], Stream *pIoStr = &Serial)
+        void begin(Stream *pIoStr = &Serial)
         {
+                        
             BufIdx = 0;
-            pCmdTab = cmdTab;
-            CmdTabSiz = size;
-            setStream(pIoStr);
-        }
+            pCmdTab = Command::CmdTab;
+            CmdTabSiz = Command::CmdCnt;           
+            
+            if (Command::OvCnt != 0)
+            {
+                pIoStr->printf("WARNING: Cli Command table overflow, %d commands dropped!\n", Command::OvCnt);
+            }
 
-        /**
-         * @brief Used to set the command table.
-         * 
-         * @param pTable The comamnd table to use   
-         */
-        template <size_t size>
-        void setCmdTab(cliCmd_t (&cmdTab)[size])
-        {
-            pCmdTab = cmdTab;
-            CmdTabSiz = size;
+            setStream(pIoStr);
         }
 
         /**

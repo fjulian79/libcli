@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2023 Julian Friedrich
+ * Copyright (C) 2025 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,14 @@
 
 #ifndef CONFIG_H_
 #define CONFIG_H_
+
+#ifndef CLI_COMMANDS_MAX
+/**
+ * @brief The maximum number of commands which can be registered in the global
+ * comamnd table, see Readme.md for more infos.
+ */
+#define CLI_COMMANDS_MAX            10
+#endif
 
 #ifndef CLI_COMMANDSIZ
 /**

@@ -11,6 +11,12 @@ Instead of changing settings in cli.h you should add a file called cli_config.h 
 #define CLI_CONFIG_H_
 
 /**
+ * @brief The maximum number of commands which can be registered in the global
+ * comamnd table, see Readme.md for more infos.
+ */
+#define CLI_COMMANDS_MAX            10
+
+/**
  * @brief Defines the maximum length of a command including all arguments in 
  * bytes.
  */
@@ -59,17 +65,29 @@ Press ```CTRL + K``` and a entire screen of your terminal sessions wil be cleare
 
 ## Automatic detection of user commands
 
-All you have to do to write a command which is then supported by libcli is to use the provided Macro:
+All you have to do to write a command which is then supported by libcli is to use the ```CLI_COMMAND``` macro:
 
 ```C
-#define CLI_COMMAND(_name)                                      \
-                                                                \
-    int8_t cmd_ ## _name (char *argv[], uint8_t argc)
+/**
+ * @brief Generates a libcli command definition based on the given name.
+ */
+#define CLI_COMMAND_DEF(_name)                                      \
+                                                                    \
+    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
+
+/**
+ * @brief Used to define and register a libcli command.
+ */
+#define CLI_COMMAND(_name)                                          \
+                                                                    \
+    CLI_COMMAND_DEF(_name);                                         \
+    static Command _name ## _registrar(#_name, cmd_ ## _name);   \
+    CLI_COMMAND_DEF(_name)
 ```
 
-At first this macro specifies the function type used to implement commands. But its name is also recognized by a python script which is executed in a pre build script. This script searches for ```CLI_COMMAND(_name_)``` within all cpp files of the current project and uses ```_name_``` as command to type io invoke the corresponding function. This macro is used in the example below. 
+At first, this macro declares the prototype of the command function based on its name. Then, it defines an instance of the Commands class, which only contains static members. This results in the constructor of this class being called at runtime before either begin() or loop() is executed. Within the constructor, the given name and function pointer are stored in the command table, which is a static member of the Commands class. This concept is based on the RAII principle (Resource Acquisition Is Initialization) in C++, which proves useful in this context. Finally, the macro creates the function header, which is used for its actual definition.
 
-If you dont use this macro you have to create your own command table and use it as argument to ```begin()```. Best practice is to start by using the macro as suggested and use the table generated in cmdTable.cpp as example.
+Note: The Commands class checks whether the command table is already completely filled before registering new commands. If the table is full, it counts the attempts to register additional functions in its static member variable ```OvCnt```. If ```OvCnt``` is not zero when calling the ```libcli::begin()``` member function, a warning will be printed via Serial, informing the user how many commands have been skipped.
 
 ## Example Code
 Below you can find a small example which implements some commands, see the help text for more details. There is also a platformio based demo project: https://github.com/fjulian79/clidemo.git 
