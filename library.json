@@ -17,6 +17,6 @@
       "espressif32"
     ],
     "build": {
-      "extraScript": "generateCmdTable.py"
+      "extraScript": "extra_script.py"
     }
   }

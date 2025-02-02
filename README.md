@@ -62,14 +62,17 @@ Press ```CTRL + K``` and a entire screen of your terminal sessions wil be cleare
 All you have to do to write a command which is then supported by libcli is to use the provided Macro:
 
 ```C
-#define CLI_COMMAND(_name)                                      \
-                                                                \
-    int8_t cmd_ ## _name (char *argv[], uint8_t argc)
+#define CLI_COMMAND(_name)                                                     \
+                                                                               \
+    CLI_COMMAND_FUNC(_name);                                                   \
+    __attribute__((used, section(".cli_cmd_section")))                          \
+    const cliCmd_t cli_cmd_##_name = {#_name, cmd_ ## _name};                  \
+    CLI_COMMAND_FUNC(_name)
 ```
 
-At first this macro specifies the function type used to implement commands. But its name is also recognized by a python script which is executed in a pre build script. This script searches for ```CLI_COMMAND(_name_)``` within all cpp files of the current project and uses ```_name_``` as command to type io invoke the corresponding function. This macro is used in the example below. 
+This Macro declares the comamnd function and generates a varable which will be placed in dedicated section called .cli_cmd_section. There is a add on linker script that adds ```__start_cli_cmd_section``` and  ```__stop_cli_cmd_section``` markers to this section. Finaly the ```begin(Stream *pIoStr)``` uses those markers to locate the implicit build table and calculate it's size. This approach is chosen because this allows proper handling of commands disabled by the preprocessor.
 
-If you dont use this macro you have to create your own command table and use it as argument to ```begin()```. Best practice is to start by using the macro as suggested and use the table generated in cmdTable.cpp as example.
+If you dont use this macro you have to create your own command table and use it as argument to ```begin(cmdTab, pIoStr)``` or ```begin(cmdTab, size, pIoStr)```. In that case you should use just ```CLI_COMMAND_FUNC(_name)``` to define your coammnds. 
 
 ## Example Code
 Below you can find a small example which implements some commands, see the help text for more details. There is also a platformio based demo project: https://github.com/fjulian79/clidemo.git 

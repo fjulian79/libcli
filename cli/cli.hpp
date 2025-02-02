@@ -35,22 +35,6 @@
 #include <stdint.h>
 
 /**
- * @brief Used to declare a cli command function. 
- * 
- * The name of this macro is used by generateCmdTable.py to find the users
- * cli command functions and generate a command list within lib cli.
- */
-#define CLI_COMMAND(_name)                                      \
-                                                                \
-    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
-
-/**
- * @brief Helps to write the command table based on the defintion in
- * CLI_COMMAND(_name) above.
- */
-#define CLI_CMD_DEF(_name)              {#_name, cmd_ ## _name}
-
-/**
  * @brief Used to describe a single command.
  * 
  * Build a array of this struct to define all supported commands.
@@ -69,6 +53,27 @@ typedef struct
 
 }cliCmd_t;
 
+/**
+ * @brief Used to declare or define a cli command function. 
+ */
+#define CLI_COMMAND_FUNCTION(_name)                                            \
+                                                                               \
+    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
+
+#define CLI_COMMAND_REGISTER(_name)                                            \
+                                                                               \
+    __attribute__((used, section(".cli_cmd_section")))                         \
+    extern const cliCmd_t cli_cmd_##_name = {#_name, cmd_ ## _name}
+
+#define CLI_COMMAND(_name)                                                     \
+                                    \
+    CLI_COMMAND_FUNCTION(_name);    \
+    CLI_COMMAND_REGISTER(_name);    \
+    CLI_COMMAND_FUNCTION(_name) 
+
+extern const cliCmd_t __start_cli_cmd_section[];
+extern const cliCmd_t __stop_cli_cmd_section[];
+
 class Cli
 {
     public:
@@ -79,26 +84,48 @@ class Cli
         Cli();
 
         /**
-         * @brief Used to initialize lib cli by using the internal 
-         * automatic generated command table, see README for further infos.
+         * @brief Used to initialize lib cli by using the automatic generated 
+         * command table, see README for further infos.
          * 
          * @param pIoStr Optional, the stream to use for read and write.
          */
-        void begin(Stream *pIoStr = &Serial);
+        void begin(Stream *pIoStr = &Serial)
+        {
+            uint8_t size = __stop_cli_cmd_section - __start_cli_cmd_section;
+            begin((cliCmd_t *)__start_cli_cmd_section, size, pIoStr);
+        }
 
         /**
          * @brief Used to initialize lib cli with a given command table
          * 
-         * @param pTable The comamnd table to use   
+         * @param pTable The comamnd table to use.   
          * @param pIoStr Optional, the stream to use for read and write.
          */
         template <size_t size>
         void begin(cliCmd_t (&cmdTab)[size], Stream *pIoStr = &Serial)
         {
+            begin(cmdTab, size, pIoStr);
+        }
+
+        /**
+         * @brief Used to initialize lib cli with a given command table in C 
+         * style
+         * 
+         * @param pTable The comamnd table to use.   
+         * @param size The size of the command table.
+         * @param pIoStr Optional, the stream to use for read and write.
+         */
+        void begin(cliCmd_t *cmdTab, uint8_t size, Stream *pIoStr = &Serial)
+        {
+            extern cliCmd_t cli_cmd_ver;
+
             BufIdx = 0;
             pCmdTab = cmdTab;
             CmdTabSiz = size;
+            Serial.printf("cmdTab: %p, size: %d\n", pCmdTab, CmdTabSiz);
+            Serial.printf("cmd[0]: %s, %p\n", pCmdTab[0].cmd_text, pCmdTab[0].p_cmd_func);
             setStream(pIoStr);
+            reset();
         }
 
         /**
