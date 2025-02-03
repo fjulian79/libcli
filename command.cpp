@@ -28,11 +28,11 @@ size_t Command::CmdCnt = 0;
 
 size_t Command::OvCnt = 0;
 
-Command::Command(const char* name, CmdFuncPtr function) 
+Command::Command(const char* name, const char* help, CmdFuncPtr function) 
 {
     if (CmdCnt < CLI_COMMANDS_MAX) 
     {
-        CmdTab[CmdCnt++] = {name, function};
+        CmdTab[CmdCnt++] = {name, help, function};
     } 
     else 
     {
@@ -53,11 +53,11 @@ CmdFuncPtr Command::find(const char* name)
     return nullptr;
 }
 
-void Command::list() 
+void Command::list(Stream& ioStream) 
 {
-    Serial.printf("Registered commands (%d):\n", CmdCnt);
+    ioStream.printf("Supported commands (%d):\n", CmdCnt);
     for (size_t i = 0; i < CmdCnt; i++) 
     {
-        Serial.printf("  %s\n", CmdTab[i].name);
+        Serial.printf("  %s\n", CmdTab[i].help);
     }
 }

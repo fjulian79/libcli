@@ -42,7 +42,8 @@
 #define CLI_COMMAND(_name)                                          \
                                                                     \
     CLI_COMMAND_DEF(_name);                                         \
-    static Command _name ## _registrar(#_name, cmd_ ## _name);   \
+    extern const char *cmd_ ## _name ## _help;                      \
+    static Command _name ## _registrar(#_name, cmd_ ## _name ## _help, cmd_ ## _name);   \
     CLI_COMMAND_DEF(_name)
 
 /**
@@ -60,6 +61,8 @@ typedef struct
      * @brief Command name as entered by the user. 
      */
     const char *name;
+
+    const char *help;
 
     /**
      * @brief Pointer to the command function.
@@ -79,12 +82,12 @@ class Command
          * @brief Construct a new Command object and automatically register it
          * in the global command table.
          */
-        Command(const char* name, CmdFuncPtr function);
+        Command(const char* name, const char* help, CmdFuncPtr function);
         
         /**
          * @brief Used to list all registered commands.
          */
-        static void list(void);
+        static void list(Stream& ioStream);
 
         /**
          * @brief Used to find a command by its name.
