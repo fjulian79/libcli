@@ -1,6 +1,6 @@
 {
     "name": "libCli",
-    "version": "3.4.0",
+    "version": "4.0.0",
     "keywords": "tty, telnet, terminal, command line",
     "description": "A simple and generic command line interface with a small footprint for bare metal embedded projects.",
     "license": "GPL-3.0",

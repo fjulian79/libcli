@@ -17,7 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>. 
  *
- * You can file issues at https://github.com/fjulian79/libcli/issues
+ * This project is hosted on GitHub:
+ *   https://github.com/fjulian79/libcli
+ * Please feel free to file issues, open pull requests, or contribute there.
  */
 
 #include <stdio.h>

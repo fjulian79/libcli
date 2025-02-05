@@ -1,7 +1,7 @@
 # libcli
-A simple and generic command line interface with a small footprint for bare metal embedded projects. 
+A simple and generic command line interface with a small footprint designed for bare-metal microcontroller systems. While primarily intended for standalone embedded applications, it could also be integrated into an RTOS-based environment. The library is designed for use with the PlatformIO build system and the Arduino framework.
 
-Never the less it shall provide some convenience features known from Linux shells like command repetition or some vt100 control sequences. 
+Despite its lightweight nature, libcli aims to provide convenience features commonly found in Linux shells, such as command repetition and basic VT100 control sequences.
 
 ## Optional configuration file
 Instead of changing settings in cli.h you should add a file called cli_config.h and set the constants to the needed values. Here is a example on how this file might look like:
@@ -12,7 +12,7 @@ Instead of changing settings in cli.h you should add a file called cli_config.h 
 
 /**
  * @brief The maximum number of commands which can be registered in the global
- * comamnd table, see Readme.md for more infos.
+ * command table, see Readme.md for more infos.
  */
 #define CLI_COMMANDS_MAX            10
 
@@ -42,7 +42,7 @@ Instead of changing settings in cli.h you should add a file called cli_config.h 
 ## Supported convenience features:
 
 ### Command repetition
-When pressing the UP key on the keyboard the last command will be recalled. This is comparable with the bash history but there are some limitations as libcli is made for bare metal systems and shall have a small footprint:
+When pressing the UP key on the keyboard the last command will be recalled. This is comparable with the history in your Linux shell but there are some limitations as libcli is made for bare metal systems and shall have a small footprint:
 * Only the last command can be recalled
 * As soon you start typing a new command the last one can no longe be recalled.
 
@@ -90,7 +90,10 @@ At first, this macro declares the prototype of the command function based on its
 Note: The Commands class checks whether the command table is already completely filled before registering new commands. If the table is full, it counts the attempts to register additional functions in its static member variable ```OvCnt```. If ```OvCnt``` is not zero when calling the ```libcli::begin()``` member function, a warning will be printed via Serial, informing the user how many commands have been skipped.
 
 ## Example Code
-Below you can find a small example which implements some commands, see the help text for more details. There is also a platformio based demo project: https://github.com/fjulian79/clidemo.git 
+Below you can find a small example which implements some commands, see the help text for more details. 
+There is also a platformio based demo project which is also my testbench while moving forward: 
+
+https://github.com/fjulian79/clidemo.git 
 
 ```C
 include <Arduino.h>
@@ -139,10 +142,10 @@ CLI_COMMAND(bell)
 CLI_COMMAND(help)
 {
     Serial.printf("Supported commands:\n");
-    Serial.printf("  ver         Used to print version infos.\n");
-    Serial.printf("  list        Lists the given arguments.\n");
-    Serial.printf("  bell        Used to ring the bell of the host terminal.\n");
-    Serial.printf("  help        Prints this text.\n");
+    Serial.printf("  ver     Used to print version infos.\n");
+    Serial.printf("  list    Lists the given arguments.\n");
+    Serial.printf("  bell    Used to ring the bell of the host terminal.\n");
+    Serial.printf("  help    Prints this text.\n");
 
     return 0;
 }
@@ -173,3 +176,9 @@ void loop()
     cli.read();
 }
 ```
+
+## Outlook
+* I plan to improve command repetition to enhance usability.
+* If I identify further useful VT100 features, I will add them.
+* There is already a branch (`auto-help`) that aims to generate help texts automatically from Doxygen comments. However, it may never be finished, as I have concluded that the amount of help offered should be defined by the user within the application context.
+

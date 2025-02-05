@@ -17,7 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>. 
  *
- * You can file issues at https://github.com/fjulian79/libcli/issues
+ * This project is hosted on GitHub:
+ *   https://github.com/fjulian79/libcli
+ * Please feel free to file issues, open pull requests, or contribute there.
  */
 
 #ifndef CLICMD_H_
@@ -84,7 +86,7 @@ class Command
         /**
          * @brief Used to list all registered commands.
          */
-        static void list(void);
+        static void list(Stream& ioStream);
 
         /**
          * @brief Used to find a command by its name.

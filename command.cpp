@@ -17,7 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>. 
  *
- * You can file issues at https://github.com/fjulian79/libcli/issues
+ * This project is hosted on GitHub:
+ *   https://github.com/fjulian79/libcli
+ * Please feel free to file issues, open pull requests, or contribute there.
  */
 
 #include "cli/command.hpp"
@@ -53,11 +55,11 @@ CmdFuncPtr Command::find(const char* name)
     return nullptr;
 }
 
-void Command::list() 
+void Command::list(Stream& ioStream) 
 {
-    Serial.printf("Registered commands (%d):\n", CmdCnt);
+    ioStream.printf("Registered commands (%d):\n", CmdCnt);
     for (size_t i = 0; i < CmdCnt; i++) 
     {
-        Serial.printf("  %s\n", CmdTab[i].name);
+        ioStream.printf("  %s\n", CmdTab[i].name);
     }
 }
