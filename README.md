@@ -1,5 +1,5 @@
 # libcli
-A simple and generic command line interface with a small footprint designed for bare-metal microcontroller systems. While primarily intended for standalone embedded applications, it could also be integrated into an RTOS-based environment. The library is designed for use with the PlatformIO build system and the Arduino framework.
+A simple and generic command line interface with ac small footprint designed for bare-metal microcontroller systems. While primarily intended for standalone embedded applications, it could also be integrated into an RTOS-based environment. The library is designed for use with the PlatformIO build system and the Arduino framework.
 
 Despite its lightweight nature, libcli aims to provide convenience features commonly found in Linux shells, such as command repetition and basic VT100 control sequences.
 

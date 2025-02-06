@@ -22,8 +22,8 @@
  * Please feel free to file issues, open pull requests, or contribute there.
  */
 
-#ifndef CLICMD_H_
-#define CLICMD_H_
+#ifndef CLI_COMMAND_H_
+#define CLI_COMMAND_H_
 
 #include <Arduino.h>
 #if __has_include ("cli_config.hpp")
@@ -44,7 +44,7 @@
 #define CLI_COMMAND(_name)                                          \
                                                                     \
     CLI_COMMAND_DEF(_name);                                         \
-    static Command _name ## _registrar(#_name, cmd_ ## _name);   \
+    static CliCommand _name ## _registrar(#_name, cmd_ ## _name);   \
     CLI_COMMAND_DEF(_name)
 
 /**
@@ -73,7 +73,7 @@ typedef struct
 /**
  * @brief The command class used to register and find commands.
  */
-class Command 
+class CliCommand 
 {
     public:
 
@@ -81,12 +81,22 @@ class Command
          * @brief Construct a new Command object and automatically register it
          * in the global command table.
          */
-        Command(const char* name, CmdFuncPtr function);
-        
+        CliCommand(const char* name, CmdFuncPtr function);
+
         /**
-         * @brief Used to list all registered commands.
+         * @brief Used to get the global command table.
          */
-        static void list(Stream& ioStream);
+        static cliCmd_t* getTable(void);
+
+        /**
+         * @brief Used to get the number of registered commands.
+         */
+        static size_t getCmdCnt(void);
+
+        /**
+         * @brief Used to get the number of commands which could not be registered.
+         */
+        static size_t getDropCnt(void);
 
         /**
          * @brief Used to find a command by its name.
@@ -95,7 +105,21 @@ class Command
          * 
          * @return The function pointer of the command or nullptr if not found.
          */
-        static CmdFuncPtr find(const char* name);
+        static CmdFuncPtr getCmd(const char* name);
+
+        /**
+         * @brief Used to execute a command by its name.
+         * 
+         * @param ioStream The stream to use for io operations.
+         * @param name The name of the command to execute.
+         * @param argv The arguments of the command.
+         * @param argc The number of arguments.
+         * 
+         * @return The return value of the command.
+         */
+        static int8_t exec(Stream& ioStream, const char* name, const char* argv[], uint8_t argc);
+
+    private:
 
         /**
          * @brief The global command table.
@@ -110,7 +134,7 @@ class Command
         /**
          * @brief The number of commands which could not be registered.
          */
-        static size_t OvCnt;
+        static size_t DropCnt;
 };
 
-#endif
+#endif /* CLI_COMMAND_H_ */

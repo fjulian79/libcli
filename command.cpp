@@ -1,5 +1,5 @@
 /*
- * libcli, a simple and generic command line interface with small footprint for
+ * libcli, a simple and generic CliCommand line interface with small footprint for
  * bare metal embedded projects.
  *
  * Copyright (C) 2025 Julian Friedrich
@@ -24,13 +24,13 @@
 
 #include "cli/command.hpp"
 
-cliCmd_t Command::CmdTab[CLI_COMMANDS_MAX];
+cliCmd_t CliCommand::CmdTab[CLI_COMMANDS_MAX];
 
-size_t Command::CmdCnt = 0;
+size_t CliCommand::CmdCnt = 0;
 
-size_t Command::OvCnt = 0;
+size_t CliCommand::DropCnt = 0;
 
-Command::Command(const char* name, CmdFuncPtr function) 
+CliCommand::CliCommand(const char* name, CmdFuncPtr function) 
 {
     if (CmdCnt < CLI_COMMANDS_MAX) 
     {
@@ -38,11 +38,26 @@ Command::Command(const char* name, CmdFuncPtr function)
     } 
     else 
     {
-        OvCnt++;
+        DropCnt++;
     }
 }
 
-CmdFuncPtr Command::find(const char* name)
+cliCmd_t* CliCommand::getTable(void)
+{
+    return CmdTab;
+}
+
+size_t CliCommand::getCmdCnt(void)
+{
+    return CmdCnt;
+}
+
+size_t CliCommand::getDropCnt(void)
+{
+    return DropCnt;
+}
+
+CmdFuncPtr CliCommand::getCmd(const char* name)
 {
     for (size_t i = 0; i < CmdCnt; i++) 
     {
@@ -55,11 +70,14 @@ CmdFuncPtr Command::find(const char* name)
     return nullptr;
 }
 
-void Command::list(Stream& ioStream) 
+int8_t CliCommand::exec(Stream& ioStream, const char* name, const char* argv[], uint8_t argc) 
 {
-    ioStream.printf("Registered commands (%d):\n", CmdCnt);
-    for (size_t i = 0; i < CmdCnt; i++) 
+    CmdFuncPtr pFunc = getCmd(name);
+
+    if (pFunc != nullptr) 
     {
-        ioStream.printf("  %s\n", CmdTab[i].name);
+        return pFunc(ioStream, argv, argc);
     }
+
+    return -1;
 }

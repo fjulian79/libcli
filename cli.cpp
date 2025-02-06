@@ -139,6 +139,23 @@ Cli::Cli() :
     argReset();
 }
 
+void Cli::begin(Stream *pIoStr)
+{
+            
+    BufIdx = 0;
+    pCmdTab = CliCommand::getTable();
+    CmdTabSiz = CliCommand::getCmdCnt();           
+    size_t dropped = CliCommand::getDropCnt();
+
+    if (dropped != 0)
+    {
+        pIoStr->printf("WARNING: Cli Command table overflow, %d dropped!\n\n", 
+            dropped);
+    }
+
+    setStream(pIoStr);
+}
+
 void Cli::setStream(Stream *pIoStr)
 {
     pStream = pIoStr;

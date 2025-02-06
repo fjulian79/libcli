@@ -52,20 +52,7 @@ class Cli
          * 
          * @param pIoStr Optional, the stream to use for read and write.
          */
-        void begin(Stream *pIoStr = &Serial)
-        {
-                        
-            BufIdx = 0;
-            pCmdTab = Command::CmdTab;
-            CmdTabSiz = Command::CmdCnt;           
-            
-            if (Command::OvCnt != 0)
-            {
-                pIoStr->printf("WARNING: Cli Command table overflow, %d commands dropped!\n", Command::OvCnt);
-            }
-
-            setStream(pIoStr);
-        }
+        void begin(Stream *pIoStr = &Serial);
 
         /**
          * @brief Used to configure the io stream to use.
