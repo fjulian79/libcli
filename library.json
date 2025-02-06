@@ -1,19 +1,28 @@
 {
     "name": "libCli",
     "version": "4.0.0",
-    "keywords": "tty, telnet, terminal, command line",
-    "description": "A simple and generic command line interface with a small footprint for bare metal embedded projects.",
+    "description": "A lightweight and versatile command-line interface for Arduino-based projects. It processes input and output through a stream interface, allowing flexible communication over serial, telnet, or any other stream-based transport method. Designed for easy integration and convenient use.",
+    "keywords": "arduino, cli, command line, console, embedded, serial, serial console, shell, telnet, terminal, tty, uart, vt100",
     "license": "GPL-3.0",
     "repository":
     {
       "type": "git",
       "url": "https://github.com/fjulian79/libcli.git"
     },
+    "authors":
+    [
+      {
+        "name": "Julan Friedrich",
+        "url": "https://github.com/fjulian79",
+        "maintainer": true
+      }
+    ],
     "frameworks": "arduino",
     "platforms": 
     [
       "ststm32",
       "espressif8266",
-      "espressif32"
+      "espressif32",
+      "pico"
     ]
   }
