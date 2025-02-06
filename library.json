@@ -23,6 +23,6 @@
       "ststm32",
       "espressif8266",
       "espressif32",
-      "pico"
+      "earlephilhower"
     ]
   }
