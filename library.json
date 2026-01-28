@@ -1,6 +1,6 @@
 {
     "name": "libCli",
-    "version": "4.0.0",
+    "version": "4.1.0",
     "description": "A lightweight and versatile command-line interface for Arduino-based projects. It processes input and output through a stream interface, allowing flexible communication over serial, telnet, or any other stream-based transport method. Designed for easy integration and convenient use.",
     "keywords": "arduino, cli, command line, console, embedded, serial, serial console, shell, telnet, terminal, tty, uart, vt100",
     "license": "GPL-3.0",
@@ -12,7 +12,7 @@
     "authors":
     [
       {
-        "name": "Julan Friedrich",
+        "name": "Julian Friedrich",
         "url": "https://github.com/fjulian79",
         "maintainer": true
       }

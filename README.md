@@ -3,6 +3,10 @@
 **A lightweight and versatile command-line interface for Arduino-based projects.**
 
 ## Changelog
+
+### Version 4.1.0 (2026-01-29)
+- Added support for escaped characters in strings passed as command arguments.
+
 ### Changes Version 4.0.0 (2025-02-07)
 - New implementation of automatic command registration.
 - API Clean up.

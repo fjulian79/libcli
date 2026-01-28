@@ -386,6 +386,7 @@ int8_t Cli::checkCmdTable(void)
 bool Cli::checkCmd(cliCmd_t *p_cmd)
 {
     uint8_t i = 0;
+    uint8_t j = 0;
     bool string=false;
 
     if(!p_cmd->name[0])
@@ -412,10 +413,32 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
 
     while (Buffer[i] != 0)
     {
-        if (Buffer[i] == ascii.stresc)
+        // Handle escape sequences within strings
+        if (Buffer[i] == '\\' && Buffer[i+1] != 0 && string)
         {
-            string = false;
-            Buffer[i] = 0;
+            // Remove the backslash by shifting remaining chars
+            j = i;
+            while (Buffer[j] != 0)
+            {
+                Buffer[j] = Buffer[j+1];
+                j++;
+            }
+            // The escaped character is now at position i
+            // Don't increment i, let the normal flow handle the next char
+        }
+        else if (Buffer[i] == ascii.stresc)
+        {
+            if (string)
+            {
+                // End of string
+                string = false;
+                Buffer[i] = 0;
+            }
+            else
+            {
+                // This is a starting quote, but not at the beginning of an argument
+                // Just continue, will be handled when we start a new argument
+            }
         }
         else if ((Buffer[i] == ascii.argsep) && (string == false))
         {
