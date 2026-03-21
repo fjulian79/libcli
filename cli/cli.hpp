@@ -145,8 +145,8 @@ class Cli
          * 
          * @param pCmd      Pointer to a command defintion
          * 
-         * @return true     In case of a positive match. 
-         * @return false    In case of a negative match.
+         * @return true     In case of a match. 
+         * @return false    In case of a missmatch, or parsing error.
          */
         bool checkCmd(cliCmd_t *pCmd);
 

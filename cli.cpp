@@ -318,7 +318,7 @@ bool Cli::restoreLastCmd(void)
         return false;
     }
 
-    /* the buffer still starts with the last command */
+    /* the buffer stil starts with the last command */
     BufIdx = strlen(Buffer);
 
     if (BufIdx == 0)
@@ -396,6 +396,7 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
 
     if(!p_cmd->name[0])
     {
+        /* the command is empty */
         return false;
     }
 
@@ -403,6 +404,7 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
     {
         if (p_cmd->name[i] != Buffer[i])
         {
+            /* the given command does not match the expected command */
             return false;
         }
             
@@ -411,6 +413,7 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
 
     if (Buffer[i] != '\0' && Buffer[i] != ascii.argsep)
     {
+        /* the given command is longer then the expected command */
         return false;
     }
         
@@ -418,37 +421,41 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
 
     while (Buffer[i] != 0)
     {
-        // Handle escape sequences within strings
+        /* Handle escape sequences within strings */
         if (Buffer[i] == '\\' && Buffer[i+1] != 0 && string)
         {
-            // Remove the backslash by shifting remaining chars
+            /* Remove the backslash by shifting remaining chars */
             j = i;
             while (Buffer[j] != 0)
             {
                 Buffer[j] = Buffer[j+1];
                 j++;
             }
-            // The escaped character is now at position i
-            // Don't increment i, let the normal flow handle the next char
+            /* The escaped character is now at position i
+             * Don't increment i, let the normal flow handle the next char 
+             */
         }
         else if (Buffer[i] == ascii.stresc)
         {
             if (string)
             {
-                // End of string
+                /* End of string */
                 string = false;
                 Buffer[i] = 0;
             }
             else
             {
-                // This is a starting quote, but not at the beginning of an argument
-                // Just continue, will be handled when we start a new argument
+                /* This is a starting quote, but not at the beginning of an argument
+                 * Ignore and treat it as part of the argument
+                 */
             }
         }
         else if ((Buffer[i] == ascii.argsep) && (string == false))
         {
+            /* Assumtion: A new argument starts after the argument separator */
             while (Buffer[i] == ascii.argsep)
             {
+                /* Consume all argument separators to find the start of the argument */
                 Buffer[i++] = 0;
             }
 
