@@ -454,14 +454,14 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
 
             if (Buffer[i] == 0)
             {   
-                break;
+                /* EOB reached, assumtion above was wrong, nothing left to parse, return */
+                return true;
             }
 
             if (Argc == CLI_ARGVSIZ)
             {
-                /* violate the limitation to signalize the error */
-                Argc++;
-                break;
+                pStream->printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
+                return false;
             }
 
             if (Buffer[i] == ascii.stresc)
@@ -476,6 +476,13 @@ bool Cli::checkCmd(cliCmd_t *p_cmd)
         }
 
         i++;
+    }
+
+    if (string)
+    {
+        /* Unterminated string detected */
+        pStream->printf("Error, unterminated string argument\n");
+        return false;
     }
 
     return true;
