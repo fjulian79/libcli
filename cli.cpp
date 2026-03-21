@@ -262,8 +262,13 @@ int8_t Cli::read(char byte)
         {
             /* Ignore the new line of a \r\n combination */
         }
-        else if ( BufIdx < CLI_COMMANDSIZ)
+        else if ( BufIdx < ( CLI_COMMANDSIZ - 1) )
         {
+            /* The index is incremented after storing the byte, there must be
+             * space for the null terminator which is added by the user by
+             * pressing enter later on. therefore the check above must respect 
+             * this: ( BufIdx < ( CLI_COMMANDSIZ - 1) ) 
+             */
             Buffer[BufIdx++] = byte;
             if(EchoEnabled)
             {
