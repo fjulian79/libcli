@@ -27,6 +27,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#if __has_include ("cli_config.hpp")
+#include "cli_config.hpp"
+#endif
 #include "cli/config.hpp"
 
 /**
