@@ -24,5 +24,8 @@
       "espressif8266",
       "espressif32",
       "earlephilhower"
-    ]
+    ], 
+    "build": {
+      "extraScript": "pre_version.py"
+    }
   }

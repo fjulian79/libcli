@@ -30,7 +30,7 @@
 #include "cli_config.hpp"
 #endif
 #include "cli/config.hpp"
-
+#include "cli/version.h"
 #include "cli/command.hpp"
 #include "cli/history.hpp"
 

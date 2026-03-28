@@ -13,6 +13,7 @@
   - Stores the commands as they are to respect potential escaped characters.
   - Stores also invalid commands to be able to recall nd fix them.
   - Does not recognise repeated commands, it just stores what you invoke. So if you recall a command and invoke it again, it will also be stored once again.
+- Added a pre build script to generate a version header based on git (preferred) or library.json
 
 ### Version 4.2.0 (2026-03-28)
 - Fixed potential out of bounds write in the command buffer.
