@@ -4,6 +4,11 @@
 
 ## Changelog
 
+### Version 4.2.0 (2026-03-28)
+- Fixed potential out of bounds write in the command buffer.
+- Fixed unahandled missing string terminator in command arguments.
+- Refactored comments and improved documentation.
+
 ### Version 4.1.0 (2026-01-29)
 - Added support for escaped characters in strings passed as command arguments.
 
