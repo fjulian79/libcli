@@ -33,6 +33,7 @@
 #include "cli/config.hpp"
 
 #include "cli/command.hpp"
+#include "cli/history.hpp"
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -123,12 +124,20 @@ class Cli
     private:
 
         /**
-         * @brief Used to restore the last valid command in the users terminal.
+         * @brief Used to restore the previous command in the users terminal.
          * 
          * @return  true in case of sucess
          *          false in case of a error.
          */
         bool restoreLastCmd(void);
+
+        /**
+         * @brief Used to restore the next command in the users terminal.
+         * 
+         * @return  true in case of sucess
+         *          false in case of a error.
+         */
+        bool restoreNextCmd(void);
 
         /**
          * @brief Used to step through the command table.
@@ -174,6 +183,11 @@ class Cli
             esc_csi = 2
         } 
         EscMode;
+
+        /**
+         * @brief The command history buffer instance
+         */
+        CliHistory History;
 
         /**
          * @brief The internal buffer.

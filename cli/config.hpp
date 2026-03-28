@@ -2,7 +2,7 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2025 Julian Friedrich
+ * Copyright (C) 2026 Julian Friedrich
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,13 @@
  * bytes.
  */
 #define CLI_COMMANDSIZ              100
+#endif
+
+#ifndef CLI_HISTORYSIZ
+/**
+ * @brief Defines the size of the command history ringbuffer in bytes.
+ */
+#define CLI_HISTORYSIZ              (CLI_COMMANDSIZ * 2)
 #endif
 
 #ifndef CLI_ARGVSIZ

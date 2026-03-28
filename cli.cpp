@@ -239,6 +239,7 @@ int8_t Cli::read(char byte)
             
             case 'B':
                 /* Down Key pressed */
+                restoreNextCmd();
                 break;
             
             case 'C':
@@ -311,38 +312,61 @@ void Cli::clearLine(void)
 
 bool Cli::restoreLastCmd(void)
 {
-    uint8_t i = 0;
-
-    if (BufIdx != 0)
+    if (History.is_used == true)
     {
-        return false;
+        if (History.seek_backward() == false)
+        {
+            goto err_out;
+        }
     }
-
-    /* the buffer stil starts with the last command */
-    BufIdx = strlen(Buffer);
-
+    
+    BufIdx = (uint8_t) History.read(Buffer, sizeof(Buffer));
     if (BufIdx == 0)
     {
-        return false;
+        goto err_out;
     }
-
-    for(i = 0; i < Argc; i++)
-    {
-        if(StringArg[i] == false)
-        {
-            BufIdx += sprintf(&Buffer[BufIdx],"%c%s", 
-                    ascii.argsep, Argv[i]);
-        }
-        else
-        {
-            BufIdx += sprintf(&Buffer[BufIdx],"%c\"%s\"", 
-                    ascii.argsep, Argv[i]);
-        }
-    }
-
-    pStream->write(Buffer);
-    
+    clearLine();
+    refreshPrompt();
+    History.is_used = true;
     return true;
+
+    err_out:
+    sendBell();
+    return false;
+}
+
+bool Cli::restoreNextCmd(void)
+{
+    if (History.is_used == true)
+    {
+        if (History.seek_forward() == false)
+        {
+            History.is_used = false;
+            BufIdx = 0;
+            Buffer[0] = 0;
+            clearLine();
+            refreshPrompt();
+            return true;
+        }
+    }
+    else
+    {
+        /* No history used so far, restoring the next command is not possible */
+        goto err_out;
+    }
+
+    BufIdx = (uint8_t) History.read(Buffer, sizeof(Buffer));
+    if (BufIdx == 0)
+    {
+        goto err_out;
+    }
+    clearLine();
+    refreshPrompt();
+    return true;
+
+    err_out:
+    sendBell();
+    return false;
 }
 
 int8_t Cli::checkCmdTable(void)
@@ -354,6 +378,9 @@ int8_t Cli::checkCmdTable(void)
     {
         goto out;
     }
+
+    History.append(Buffer, BufIdx);
+    History.is_used = false;
 
     for(i=0; i<CmdTabSiz; i++)
     {
@@ -510,6 +537,7 @@ void Cli::reset(void)
 {
     BufIdx = 0;
     EscMode = esc_false;
+    History.is_used = false;
     refreshPrompt();
     cli_fflush();
 }
