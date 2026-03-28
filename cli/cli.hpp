@@ -22,8 +22,7 @@
  * Please feel free to file issues, open pull requests, or contribute there.
  */
 
-#ifndef CLI_H_
-#define CLI_H_
+#pragma once
 
 #include <Arduino.h>
 
@@ -233,5 +232,3 @@ class Cli {
          */
         bool EchoEnabled;
 };
-
-#endif /* CLI_H_ */

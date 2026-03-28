@@ -22,8 +22,7 @@
  * Please feel free to file issues, open pull requests, or contribute there.
  */
 
-#ifndef CLI_COMMAND_H_
-#define CLI_COMMAND_H_
+#pragma once
 
 #include <Arduino.h>
 #if __has_include ("cli_config.hpp")
@@ -139,5 +138,3 @@ class CliCommand {
          */
         static size_t DropCnt;
 };
-
-#endif /* CLI_COMMAND_H_ */

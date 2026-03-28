@@ -29,8 +29,7 @@
  * include path.
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#pragma once
 
 #ifndef CLI_COMMANDS_MAX
 /**
@@ -75,5 +74,3 @@
  */
 #define CLI_BUFFEREDIO              0
 #endif
-
-#endif /* CONFIG_H_ */
