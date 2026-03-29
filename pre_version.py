@@ -50,6 +50,9 @@ version_source = "library.json"
 
 # if libcli is a git repo, use that instead
 try:
+    # Check if there is a .git folder, if not this is probably not a git repository
+    if not os.path.exists(".git"):
+        raise subprocess.CalledProcessError(1, "git")
     gitVersion = subprocess.check_output(
         ["git", "describe", "--abbrev", "--dirty", "--always", "--tags"], 
         stderr=subprocess.STDOUT).decode().strip()
@@ -57,7 +60,7 @@ try:
         version = gitVersion
         version_source = "git"
 except subprocess.CalledProcessError:
-    # git command failed, probably not a git repository
+    # no .git folder, or git command failed -> probably not a git repository
     pass
 
 file = open(targetFileName, "w")

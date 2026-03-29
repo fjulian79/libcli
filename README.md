@@ -4,7 +4,10 @@
 
 ## Changelog
 
-### Version 4.3.0 (2026-06-15)
+## Version 4.3.1 (2026-03-29)
+- Fixed check for a git repo in pre_version.py.
+
+### Version 4.3.0 (2026-03-28)
 - Redesigned the history management to be more robust, efficient and capable.
   - No multiple commands can be stored in a fixed size ring buffer.
   - Number of comands to be stored depends on their size and the buffer size.
