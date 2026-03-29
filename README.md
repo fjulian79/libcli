@@ -4,6 +4,17 @@
 
 ## Changelog
 
+### Version 4.3.0 (2026-06-15)
+- Redesigned the history management to be more robust, efficient and capable.
+  - No multiple commands can be stored in a fixed size ring buffer.
+  - Number of comands to be stored depends on their size and the buffer size.
+  - The oldest commands get overwritten if needed to store a new command.
+  - Can navigate back and forth through the history.
+  - Stores the commands as they are to respect potential escaped characters.
+  - Stores also invalid commands to be able to recall nd fix them.
+  - Does not recognise repeated commands, it just stores what you invoke. So if you recall a command and invoke it again, it will also be stored once again.
+- Added a pre build script to generate a version header based on git (preferred) or library.json
+
 ### Version 4.2.0 (2026-03-28)
 - Fixed potential out of bounds write in the command buffer.
 - Fixed unahandled missing string terminator in command arguments.

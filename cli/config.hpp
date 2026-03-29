@@ -2,20 +2,20 @@
  * libcli, a simple and generic command line interface with small footprint for
  * bare metal embedded projects.
  *
- * Copyright (C) 2025 Julian Friedrich
- * 
+ * Copyright (C) 2026 Julian Friedrich
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * This project is hosted on GitHub:
  *   https://github.com/fjulian79/libcli
@@ -24,13 +24,12 @@
 
 /**
  * ATTENTION: This file is the default lib cli configuration and shall serve as
- * template if a project specific configuration is needed. In this case copt 
- * the file, rename it to cli_config.h and make it directly available on the 
+ * template if a project specific configuration is needed. In this case copt
+ * the file, rename it to cli_config.h and make it directly available on the
  * include path.
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#pragma once
 
 #ifndef CLI_COMMANDS_MAX
 /**
@@ -42,10 +41,17 @@
 
 #ifndef CLI_COMMANDSIZ
 /**
- * @brief Defines the maximum length of a command including all arguments in 
+ * @brief Defines the maximum length of a command including all arguments in
  * bytes.
  */
 #define CLI_COMMANDSIZ              100
+#endif
+
+#ifndef CLI_HISTORYSIZ
+/**
+ * @brief Defines the size of the command history ringbuffer in bytes.
+ */
+#define CLI_HISTORYSIZ              (CLI_COMMANDSIZ * 2)
 #endif
 
 #ifndef CLI_ARGVSIZ
@@ -68,5 +74,3 @@
  */
 #define CLI_BUFFEREDIO              0
 #endif
-
-#endif /* CONFIG_H_ */
