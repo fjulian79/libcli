@@ -158,6 +158,16 @@ class CliHistory {
         }
 
         /**
+         * @brief Reset the navigation state to the most recent entry.
+         * 
+         * Sets pRead to pLast and clears the is_used flag.
+         */
+        inline void reset_navigation(void) {
+            pRead = pLast;
+            is_used = false;
+        }
+
+        /**
          * @brief Internal buffer to store the lines.
          */
         char Buffer [CLI_HISTORYSIZ];
@@ -182,4 +192,11 @@ class CliHistory {
          * considered empty.
          */
         char *pTail;
+
+        /**
+         * @brief Pointer to the start of the most recently added line in the
+         * buffer. Used to detect and prevent duplicate consecutive entries.
+         * If it is zero, the buffer is considered empty.
+         */
+        char *pLast;
 };

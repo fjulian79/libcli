@@ -41,6 +41,31 @@ bool CliHistory::append(const char *str, size_t len) {
         return false;
     }
 
+    /* Check if the new string is identical to the last added entry to avoid
+     * duplicate consecutive entries in the history */
+    if (pLast != 0) {
+        char *pTemp = pLast;
+        const char *pStr = str;
+        bool identical = true;
+
+        /* Compare character by character, handling wrap-around */
+        for (size_t i = 0; i < len; i++) {
+            if (*pTemp != *pStr) {
+                identical = false;
+                break;
+            }
+            increment_position(pTemp);
+            pStr++;
+        }
+
+        /* Check if we reached the null terminator at pTemp */
+        if (identical && *pTemp == '\0') {
+            /* Strings are identical, no need to append */
+            reset_navigation();
+            return true;
+        }
+    }
+
     while (get_free_space() < len + 1) {
         /* Just for safety, This should not happen, as get_free_space should
          * return sizeof(Buffer) in this case */
@@ -66,7 +91,7 @@ bool CliHistory::append(const char *str, size_t len) {
      * By incrementing the length by one, we also write the null terminator of
      * the line, without the need to handle it as special case.
      */
-    pRead = pHead;
+    pLast = pHead;
     pTail = pTail == 0 ? pHead : pTail;
     len++;
     while (len > 0) {
@@ -79,6 +104,7 @@ bool CliHistory::append(const char *str, size_t len) {
         len -= to_write;
     }
 
+    reset_navigation();
     return true;
 }
 
@@ -198,4 +224,5 @@ void CliHistory::clear(void) {
     pHead = Buffer;
     pRead = 0;
     pTail = 0;
+    pLast = 0;
 }

@@ -4,6 +4,10 @@
 
 ## Changelog
 
+## Unreleased
+- Added a check to prevent multiple consecutive identical commands from being stored in the history buffer. 
+  This helps to keep the history more relevant and avoids cluttering it with repeated commands.
+
 ## Version 4.3.1 (2026-03-29)
 - Fixed check for a git repo in pre_version.py.
 
