@@ -7,6 +7,8 @@
 ## Unreleased
 - Added a check to prevent multiple consecutive identical commands from being stored in the history buffer. 
   This helps to keep the history more relevant and avoids cluttering it with repeated commands.
+- Added a check to skip processing of empty commands (commands that consist only of whitespace). 
+  This prevents unnecessary processing and keeps the command history clean.
 
 ## Version 4.3.1 (2026-03-29)
 - Fixed check for a git repo in pre_version.py.
