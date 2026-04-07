@@ -57,7 +57,7 @@ class CliHistory {
          * @brief Store the given string in the internal buffer.
          *
          * This function will ...
-         *   - atomaticly free space as needed by removing the oldest line in
+         *   - automatically free space as needed by removing the oldest line in
          *     the buffer until the new data can be stored.
          *   - set the the read pointer to the new line which is then the newest
          *     line in the buffer.
@@ -105,7 +105,7 @@ class CliHistory {
          *              terminator.
          * @param len   The maximum length of the given buffer.
          *
-         * @return  The number of bytes read, including the null terminator.
+         * @return  The number of bytes read, excluding the null terminator.
          *          Returns 0 if there is no line to read or if the provided
          *          buffer is too small.
          */
