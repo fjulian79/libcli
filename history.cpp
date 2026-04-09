@@ -25,6 +25,8 @@
 #include "cli/history.hpp"
 #include "string.h"
 
+#if CLI_HISTORYSIZ > 0
+
 CliHistory::CliHistory(void) {
     is_used = false;
     memset(Buffer, 0, sizeof(Buffer));
@@ -226,3 +228,5 @@ void CliHistory::clear(void) {
     pTail = 0;
     pLast = 0;
 }
+
+#endif // CLI_HISTORYSIZ > 0

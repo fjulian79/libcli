@@ -32,6 +32,8 @@
 #endif
 #include "cli/config.hpp"
 
+#if CLI_HISTORYSIZ > 0
+
 /**
  * @brief A class to store lines of text in a fixed-size circular buffer.
  *
@@ -200,3 +202,5 @@ class CliHistory {
          */
         char *pLast;
 };
+
+#endif // CLI_HISTORYSIZ > 0

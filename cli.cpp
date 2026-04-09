@@ -277,6 +277,7 @@ void Cli::clearLine(void) {
 }
 
 bool Cli::restoreLastCmd(void) {
+#if CLI_HISTORYSIZ > 0
     if (History.is_used == true) {
         if (History.seek_backward() == false) {
             goto err_out;
@@ -295,9 +296,14 @@ bool Cli::restoreLastCmd(void) {
     err_out:
     sendBell();
     return false;
+#else
+    sendBell();
+    return false;
+#endif
 }
 
 bool Cli::restoreNextCmd(void) {
+#if CLI_HISTORYSIZ > 0
     if (History.is_used == true) {
         if (History.seek_forward() == false) {
             History.is_used = false;
@@ -323,6 +329,10 @@ bool Cli::restoreNextCmd(void) {
     err_out:
     sendBell();
     return false;
+#else
+    sendBell();
+    return false;
+#endif
 }
 
 int8_t Cli::checkCmdTable(void)
@@ -351,8 +361,10 @@ int8_t Cli::checkCmdTable(void)
         goto out_2;
     }
 
+#if CLI_HISTORYSIZ > 0
     History.append(Buffer, BufIdx);
     History.is_used = false;
+#endif
 
     for(i=0; i<CmdTabSiz; i++) {
         if (checkCmd(&pCmdTab[i])) {
@@ -482,7 +494,9 @@ void Cli::argReset(void) {
 void Cli::reset(void) {
     BufIdx = 0;
     EscMode = esc_false;
+#if CLI_HISTORYSIZ > 0
     History.is_used = false;
+#endif
     refreshPrompt();
     cli_fflush();
 }

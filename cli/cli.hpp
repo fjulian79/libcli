@@ -183,10 +183,12 @@ class Cli {
         }
         EscMode;
 
+#if CLI_HISTORYSIZ > 0
         /**
          * @brief The command history buffer instance
          */
         CliHistory History;
+#endif
 
         /**
          * @brief The internal buffer.

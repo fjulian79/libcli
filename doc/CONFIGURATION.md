@@ -70,9 +70,25 @@ This defines the size of the input buffer. Commands longer than this will be tru
 
 The history stores multiple commands in a circular buffer. The number of commands that can be stored depends on their length. Longer commands take up more space, so fewer will fit in the buffer.
 
+**Disabling History:**
+Set to `0` to completely disable command history support. This saves memory (measured on RP2040):
+- **~224 bytes RAM** (buffer + pointers)
+- **~824 bytes Flash** (entire history implementation removed by linker)
+
+Actual savings may vary depending on platform, compiler, and optimization settings.
+
+**Size Validation:**
+The history buffer must be large enough to store at least one complete command. Therefore:
+- **`CLI_HISTORYSIZ >= CLI_COMMANDSIZ`**: Valid, history is enabled
+- **`CLI_HISTORYSIZ == 0`**: Valid, history is intentionally disabled
+- **`0 < CLI_HISTORYSIZ < CLI_COMMANDSIZ`**: Invalid - generates compile warning and is forced to 0
+
+Values between 1 and CLI_COMMANDSIZ-1 will trigger a compile warning and be forced to 0 to prevent inconsistent behavior. Inconsistency may occur when short commands can be stored in the history (because they fit) while long commands cannot be stored. This leads to the decision that the history buffer shall offer at least enough space to store the longest possible command.
+
 **Example:**
 ```cpp
-#define CLI_HISTORYSIZ      500  // Store more history
+#define CLI_HISTORYSIZ      500   // Store more history
+#define CLI_HISTORYSIZ      0     // Disable history completely
 ```
 
 ### CLI_ARGVSIZ
@@ -125,12 +141,26 @@ Argument Array:    CLI_ARGVSIZ * sizeof(char*)
 
 ### Example Calculation
 
-With default settings:
+With default settings (approximate):
 - Command table: 10 × 8 bytes = 80 bytes
 - Command buffer: 100 bytes
 - History buffer: 200 bytes
+- History pointers/state: 4 × 4 + 1 = 17 bytes
 - Argument array: 4 × 4 bytes = 16 bytes
-- **Total: ~396 bytes**
+- String flags: 4 bytes
+- Misc (pointers, counters, state): ~12 bytes
+- **Total: ~429 bytes** (plus compiler padding/alignment)
+
+With history disabled (approximate):
+- Command table: 10 × 8 bytes = 80 bytes
+- Command buffer: 100 bytes
+- Argument array: 4 × 4 bytes = 16 bytes
+- String flags: 4 bytes
+- Misc (pointers, counters, state): ~12 bytes
+- **Total: ~212 bytes** (plus compiler padding/alignment)
+
+**Measured on RP2040:** Disabling history saves ~224 bytes RAM + ~824 bytes Flash.  
+(Actual values depend on platform, compiler, optimization, and struct alignment.)
 
 ### Optimization Tips
 
@@ -138,7 +168,7 @@ With default settings:
 ```cpp
 #define CLI_COMMANDS_MAX    5
 #define CLI_COMMANDSIZ      50
-#define CLI_HISTORYSIZ      100
+#define CLI_HISTORYSIZ      0    // Disable history
 #define CLI_ARGVSIZ         3
 ```
 

@@ -50,8 +50,28 @@
 #ifndef CLI_HISTORYSIZ
 /**
  * @brief Defines the size of the command history ringbuffer in bytes.
+ * 
+ * Set to 0 to completely disable history support and save memory.
+ * 
+ * Must be >= CLI_COMMANDSIZ to ensure at least one full command can be stored.
+ * 
+ * Values between 1 and CLI_COMMANDSIZ-1 will trigger a compile warning and be 
+ * forced to 0 to prevent inconsistent behavior. Othervise inconsistency may 
+ * occur when short commands can be stored in the history (because they fit) 
+ * while long commands cannot be stored. This leads to the decision that the 
+ * history buffer shall offer at least enough space to store the longest 
+ * possible command.
  */
 #define CLI_HISTORYSIZ              (CLI_COMMANDSIZ * 2)
+#endif
+
+/**
+ * @brief Validate CLI_HISTORYSIZ and disable if invalid
+ */
+#if (CLI_HISTORYSIZ > 0) && (CLI_HISTORYSIZ < CLI_COMMANDSIZ)
+    #warning "CLI_HISTORYSIZ < CLI_COMMANDSIZ: History forced disabled. Use 0 to disable intentionally, or >= CLI_COMMANDSIZ to enable."
+    #undef CLI_HISTORYSIZ
+    #define CLI_HISTORYSIZ 0
 #endif
 
 #ifndef CLI_ARGVSIZ
