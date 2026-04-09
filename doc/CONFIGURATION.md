@@ -1,0 +1,155 @@
+# Configuration Reference
+
+libCli can be customized through configuration defines that control buffer sizes, limits, and behavior.
+
+## Configuration Methods
+
+You can configure libCli in two ways:
+
+### 1. Using a Header File (Recommended)
+
+Create a file named `cli_config.hpp` in your project and define your custom values:
+
+```cpp
+#pragma once
+
+#define CLI_COMMANDS_MAX    20
+#define CLI_COMMANDSIZ      200
+#define CLI_HISTORYSIZ      400
+#define CLI_ARGVSIZ         8
+#define CLI_PROMPT          "$ "
+```
+
+Then add the include path in your `platformio.ini`:
+
+```ini
+build_flags = -Icfg  # If your cli_config.hpp is in ./cfg/
+```
+
+### 2. Using Build Flags
+
+Define the configuration directly in your `platformio.ini`:
+
+```ini
+build_flags = 
+    -DCLI_COMMANDS_MAX=20
+    -DCLI_COMMANDSIZ=200
+    -DCLI_PROMPT='"$ "'
+```
+
+## Configuration Options
+
+### CLI_COMMANDS_MAX
+**Type:** Integer  
+**Default:** `10`  
+**Description:** Maximum number of commands that can be registered in the global command table.
+
+If you define more commands than this limit, the excess commands will be dropped. Use `CliCommand::getDropCnt()` to check if commands were dropped.
+
+**Example:**
+```cpp
+#define CLI_COMMANDS_MAX    20  // Support up to 20 commands
+```
+
+### CLI_COMMANDSIZ
+**Type:** Integer  
+**Default:** `100`  
+**Description:** Maximum length of a command line including all arguments in bytes.
+
+This defines the size of the input buffer. Commands longer than this will be truncated.
+
+**Example:**
+```cpp
+#define CLI_COMMANDSIZ      200  // Allow longer commands
+```
+
+### CLI_HISTORYSIZ
+**Type:** Integer  
+**Default:** `CLI_COMMANDSIZ * 2` (200 bytes)  
+**Description:** Size of the command history ring buffer in bytes.
+
+The history stores multiple commands in a circular buffer. The number of commands that can be stored depends on their length. Longer commands take up more space, so fewer will fit in the buffer.
+
+**Example:**
+```cpp
+#define CLI_HISTORYSIZ      500  // Store more history
+```
+
+### CLI_ARGVSIZ
+**Type:** Integer  
+**Default:** `4`  
+**Description:** Maximum number of arguments that can be passed to a command.
+
+This includes the command name itself (argv[0]). So with the default of 4, you can have the command plus 3 arguments.
+
+**Example:**
+```cpp
+#define CLI_ARGVSIZ         8  // Support up to 7 arguments
+```
+
+### CLI_PROMPT
+**Type:** String  
+**Default:** `"#>"`  
+**Description:** Command prompt string displayed to the user.
+
+**Example:**
+```cpp
+#define CLI_PROMPT          "$ "
+#define CLI_PROMPT          "MyDevice> "
+```
+
+### CLI_BUFFEREDIO
+**Type:** Integer (0 or 1)  
+**Default:** `0`  
+**Description:** Enable if stdio is buffered and requires `fflush(stdout)`.
+
+This is rarely needed in microcontroller environments but may be useful in certain platform configurations.
+
+**Example:**
+```cpp
+#define CLI_BUFFEREDIO      1  // Enable fflush() calls
+```
+
+## Memory Considerations
+
+### Calculating Memory Usage
+
+Total static memory used by libCli:
+
+```
+Command Table:     CLI_COMMANDS_MAX * sizeof(cliCmd_t)
+Command Buffer:    CLI_COMMANDSIZ
+History Buffer:    CLI_HISTORYSIZ
+Argument Array:    CLI_ARGVSIZ * sizeof(char*)
+```
+
+### Example Calculation
+
+With default settings:
+- Command table: 10 × 8 bytes = 80 bytes
+- Command buffer: 100 bytes
+- History buffer: 200 bytes
+- Argument array: 4 × 4 bytes = 16 bytes
+- **Total: ~396 bytes**
+
+### Optimization Tips
+
+**For minimal memory footprint:**
+```cpp
+#define CLI_COMMANDS_MAX    5
+#define CLI_COMMANDSIZ      50
+#define CLI_HISTORYSIZ      100
+#define CLI_ARGVSIZ         3
+```
+
+**For feature-rich applications:**
+```cpp
+#define CLI_COMMANDS_MAX    30
+#define CLI_COMMANDSIZ      256
+#define CLI_HISTORYSIZ      1024
+#define CLI_ARGVSIZ         10
+```
+
+## Default Configuration
+
+The default configuration is defined in `cli/config.hpp`. You can view this file to see all available options and their defaults. Any values you define in your `cli_config.hpp` will override the defaults.
