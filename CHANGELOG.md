@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.5.0] - 2026-04-09
+
+### Added
+- Optional history support: set `CLI_HISTORYSIZ = 0` to completely disable command history feature
+- Memory savings when history is disabled: ~224 bytes RAM + ~824 bytes Flash (measured on RP2040)
+- Compile-time validation for `CLI_HISTORYSIZ` with warning for invalid values
+- Comprehensive memory usage documentation in CONFIGURATION.md
+- Updated README and added CHANGELOG.md, doc/CONFIGURATION.md, doc/API.md for better documentation and clarity
+
 ## [4.4.0] - 2026-04-07
 
 ### Added
