@@ -126,6 +126,48 @@ This is rarely needed in microcontroller environments but may be useful in certa
 #define CLI_BUFFEREDIO      1  // Enable fflush() calls
 ```
 
+### CLI_TAB_COMPLETION
+**Type:** Integer (0 or 1)  
+**Default:** `1`  
+**Description:** Enable or disable bash-like tab completion for commands.
+
+When enabled (default), pressing Tab will:
+- Auto-complete if there's exactly one matching command
+- Complete to the longest common prefix if there are multiple matches
+- Display all matching commands below the current line
+- Use intelligent line wrapping based on `CLI_TERMINAL_WIDTH`
+
+When disabled, pressing Tab will just trigger a bell sound.
+
+**Memory Savings:**
+Disabling tab completion saves approximately **~776 bytes of flash memory** (measured on RP2040) by removing the entire completion implementation. RAM savings are negligible (state tracking variables are optimized away by the compiler when disabled).
+
+**Example:**
+```cpp
+#define CLI_TAB_COMPLETION  0     // Disable for resource-constrained systems
+#define CLI_TAB_COMPLETION  1     // Enable (default)
+```
+
+### CLI_TERMINAL_WIDTH
+**Type:** Integer  
+**Default:** `80`  
+**Description:** Assumed terminal width in characters for intelligent line wrapping.
+
+This setting is used by tab completion to wrap the list of matching commands across multiple lines. Commands are arranged to fit within this width, preventing line breaks at awkward positions.
+
+Common values:
+- `80` - Standard terminal width (default)
+- `120` - Wide terminal
+- `40` - Narrow embedded display
+
+**Note:** This setting has no effect if `CLI_TAB_COMPLETION` is disabled.
+
+**Example:**
+```cpp
+#define CLI_TERMINAL_WIDTH  120   // Wide terminal
+#define CLI_TERMINAL_WIDTH  40    // Narrow display
+```
+
 ## Memory Considerations
 
 ### Calculating Memory Usage
@@ -135,8 +177,9 @@ Total static memory used by libCli:
 ```
 Command Table:     CLI_COMMANDS_MAX * sizeof(cliCmd_t)
 Command Buffer:    CLI_COMMANDSIZ
-History Buffer:    CLI_HISTORYSIZ
+History Buffer:    CLI_HISTORYSIZ (if enabled)
 Argument Array:    CLI_ARGVSIZ * sizeof(char*)
+Tab Completion:    2 bytes state (if enabled, negligible in practice)
 ```
 
 ### Example Calculation
@@ -148,8 +191,9 @@ With default settings (approximate):
 - History pointers/state: 4 × 4 + 1 = 17 bytes
 - Argument array: 4 × 4 bytes = 16 bytes
 - String flags: 4 bytes
+- Tab completion state: 2 bytes (optimized away when disabled)
 - Misc (pointers, counters, state): ~12 bytes
-- **Total: ~429 bytes** (plus compiler padding/alignment)
+- **Total: ~431 bytes** (plus compiler padding/alignment)
 
 With history disabled (approximate):
 - Command table: 10 × 8 bytes = 80 bytes
@@ -170,6 +214,7 @@ With history disabled (approximate):
 #define CLI_COMMANDSIZ      50
 #define CLI_HISTORYSIZ      0    // Disable history
 #define CLI_ARGVSIZ         3
+#define CLI_TAB_COMPLETION  0    // Disable tab completion
 ```
 
 **For feature-rich applications:**
@@ -178,6 +223,8 @@ With history disabled (approximate):
 #define CLI_COMMANDSIZ      256
 #define CLI_HISTORYSIZ      1024
 #define CLI_ARGVSIZ         10
+#define CLI_TAB_COMPLETION  1    // Enable tab completion (default)
+#define CLI_TERMINAL_WIDTH  120  // Wide terminal
 ```
 
 ## Default Configuration

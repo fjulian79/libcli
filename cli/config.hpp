@@ -106,3 +106,22 @@
 #else
 #define cli_fflush()
 #endif
+
+#ifndef CLI_TAB_COMPLETION
+/**
+ * @brief Enable or disable tab completion feature.
+ * 
+ * Set to 1 to enable bash-like tab completion (default).
+ * Set to 0 to disable and save ~400 bytes of flash memory.
+ * When disabled, tab key will just trigger a bell.
+ */
+#define CLI_TAB_COMPLETION          1
+#endif
+
+#ifndef CLI_TERMINAL_WIDTH
+/**
+ * @brief Defines the assumed terminal width in characters.
+ * Used for wrapping tab completion output across multiple lines.
+ */
+#define CLI_TERMINAL_WIDTH          80
+#endif

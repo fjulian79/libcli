@@ -19,8 +19,15 @@
   - Preserves escaped characters
   - Stores invalid commands for easy correction
   - Automatic duplicate filtering (consecutive identical commands)
+- **Tab Completion** - Bash-like command completion
+  - Press Tab to auto-complete commands
+  - Single match: Completes and adds space for argument input
+  - Line wrapping respects terminal width
+  - VT100 cursor control for seamless editing
+  - Optional feature: Can be disabled to save ~776 bytes flash (measured on RP2040)
 - **VT100 Terminal Support** - Standard terminal sequences for better usability
   - Arrow Up/Down: Navigate command history
+  - Tab: Auto-complete commands
   - Backspace/DEL: Edit commands
   - Ctrl+L: Clear screen
   - Ctrl+K: Clear line
@@ -41,6 +48,8 @@
 ## Design Principles
 
 Modern dual-core MCUs like the RP2040 or ESP32 running at 133MHz+ enable more sophisticated CLI features than was possible when this project started. libCli embraces these capabilities to provide better usability while maintaining its focus on efficiency and lightweight operation. There must be a clear difference between a microcontroller CLI and embedded Linux running on a Raspberry Pi - **libCli shall not become bash!**
+
+At this point you may ask: And why does the library then provide features like command history and tab completion? The answer is simple: Because we can with reasonable effort! With careful design and optimization, these features can be implemented in a way that is both efficient and user-friendly, without compromising the core principles of the library. The goal is to provide a powerful yet lightweight CLI solution that enhances the user experience while respecting the constraints of embedded systems. What's not planned is add things like argument auto-completion, scripting capabilities, or a full-fledged shell environment. 
 
 The library is built on these core principles:
 
@@ -185,6 +194,8 @@ Create `cli_config.hpp` in your project:
 #define CLI_HISTORYSIZ      500     // More history
 #define CLI_ARGVSIZ         8       // More arguments
 #define CLI_PROMPT          "$ "    // Custom prompt
+#define CLI_TAB_COMPLETION  1       // Enable tab completion (default)
+#define CLI_TERMINAL_WIDTH  80      // Terminal width for wrapping
 ```
 
 Add to `platformio.ini`:
@@ -201,6 +212,8 @@ build_flags = -Icfg  # Path to your cli_config.hpp
 | `CLI_HISTORYSIZ` | 200 | History buffer size (bytes) |
 | `CLI_ARGVSIZ` | 4 | Max number of arguments |
 | `CLI_PROMPT` | `"#>"` | Command prompt string |
+| `CLI_TAB_COMPLETION` | 1 | Enable tab completion (0=off) |
+| `CLI_TERMINAL_WIDTH` | 80 | Terminal width for wrapping |
 
 For complete configuration documentation, see [CONFIGURATION.md](doc/CONFIGURATION.md).
 

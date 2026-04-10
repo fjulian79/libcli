@@ -37,7 +37,12 @@ Cli::Cli()
       Argc(0),
       pCmdTab(0),
       CmdTabSiz(0),
-      EchoEnabled(true) {
+      EchoEnabled(true)
+#if CLI_TAB_COMPLETION != 0
+      ,LastTabPos(0xFF),
+      MatchLinesDisplayed(0)
+#endif
+{
     argReset();
 }
 
@@ -77,6 +82,9 @@ int8_t Cli::read(char byte) {
     }
     /* No escape so far but comand terminator received */
     else if ((EscMode == esc_false) && (byte == ascii.ret)) {
+        /* Clear any displayed match lines first */
+        clearMatchLines();
+
         if(EchoEnabled) {
             pStream->write(ascii.newline);
         }
@@ -102,8 +110,12 @@ int8_t Cli::read(char byte) {
     }
     /* No escape so far but now Form feed has been received. */
     else if ((EscMode == esc_false) && (byte == ascii.ff)) {
-        pStream->write(vt100.clrscr);
+        clearScreen();
         refreshPrompt();
+    }
+    /* No escape so far but now Tab has been received. */
+    else if ((EscMode == esc_false) && (byte == ascii.tab)) {
+        handleTabCompletion();
     }
     /* Escape received and now the CSI character */
     else if ((EscMode == esc_true) && (byte == ascii.csi)) {
@@ -411,9 +423,16 @@ void Cli::argReset(void) {
 void Cli::reset(void) {
     BufIdx = 0;
     EscMode = esc_false;
+
+#if CLI_TAB_COMPLETION != 0
+    LastTabPos = 0xFF;
+    MatchLinesDisplayed = 0;
+#endif
+
 #if CLI_HISTORYSIZ > 0
     History.is_used = false;
 #endif
+
     refreshPrompt();
     cli_fflush();
 }

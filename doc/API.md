@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for libCli.
+This file is intended to provide infos on the public API of libCli which is intended to be used by 'users'. This file will not provide detailed information on the internal workings of the library, as this is done in the source code by comments where necessary. 
 
 ## Table of Contents
 
@@ -57,16 +57,22 @@ For a detailed explanation of the registration mechanism, why this design was ch
 
 **Description:** Macro to only define the command signature without registration. Useful for forward declarations.
 
+This macro can be used when you need to or want to declare a command fucntion which is implemented somewhere else but you want to execute it directly with minimal overhead.
+
+However, the CliCommand::exec() method can be used to execute commands by name at runtime without the need for forward declarations, as it looks up the command in the command table. So in most cases, you don't need to use CLI_COMMAND_DEF unless you want to call the command function directly by its name (e.g., cmd_<name>) instead of using CliCommand::exec(). See [CliCommand Class](#clicommand-class) documentation for more details on how to execute commands programmatically.
+
 **Usage:**
 ```cpp
 // Forward declaration
 CLI_COMMAND_DEF(mycommand);
 
-// Later implementation
-CLI_COMMAND(mycommand) {
-    // Implementation
-    return 0;
-}
+// Example for manual command execution with forward declaration
+cmd_mycommand(ioStream, nullptr, 0);
+
+// Example for manual command execution without the need of forward declarations. 
+// In this case you don't need forward decalartion because it command is found by name at runtime. 
+CliCommand::exec(ioStream, "mycommand", nullptr, 0);
+
 ```
 
 ## Cli Class
@@ -131,7 +137,7 @@ void loop() {
 int8_t read(char byte);
 ```
 
-Process a single incoming byte. Useful for custom input handling.
+Process a single incoming byte. Useful for custom input handling. Usually you don't need this method as `loop()` handles reading from the stream by calling `read()` internally, but it's available for corner cases if needed.
 
 **Parameters:**
 - `byte` - Character to process
@@ -153,6 +159,8 @@ void setStream(Stream *pIoStr);
 ```
 
 Change the I/O stream during runtime.
+
+**Important:** Changing the stream implicitly resets the CLI state (input buffer, history navigation, tab completion state) to avoid inconsistencies.
 
 **Parameters:**
 - `pIoStr` - Pointer to the new Stream object
@@ -232,6 +240,61 @@ Clear the current line and move cursor to the first column using VT100 sequences
 ```cpp
 cli.clearLine();
 cli.refreshPrompt();  // Show fresh prompt
+```
+
+### clearScreen()
+
+```cpp
+void clearScreen(void);
+```
+
+Clear the entire screen and move the cursor to the first row and column using VT100 sequences.
+
+**Example:**
+```cpp
+CLI_COMMAND(clear) {
+    cli.clearScreen();
+    cli.refreshPrompt();
+    return 0;
+}
+```
+
+### saveCursor()
+
+```cpp
+void saveCursor(void);
+```
+
+Save the current terminal cursor position using VT100 escape sequences (DECSC). The position can be restored later with `restoreCursor()`.
+
+**Use Cases:**
+- Within libCli for printing completion matches while preserving the prompt position
+- Multi-line status displays
+
+**Example:**
+```cpp
+cli.saveCursor();
+ioStream.println("\nTemporary status info");
+cli.restoreCursor();  // Back to original position
+```
+
+### restoreCursor()
+
+```cpp
+void restoreCursor(void);
+```
+
+Restore the terminal cursor to the position previously saved by `saveCursor()` using VT100 escape sequences (DECRC).
+
+**Note:** Must be called after `saveCursor()`, otherwise behavior is terminal-dependent.
+
+**Example:**
+```cpp
+cli.saveCursor();
+ioStream.println("\nStatus: Processing...");
+delay(1000);
+cli.restoreCursor();
+ioStream.println("\nStatus: Complete!    ");
 ```
 
 ### reset()
@@ -384,93 +447,25 @@ Number of arguments including the command name.
 **Example:**
 For input `"status system verbose"`: `argc = 3`
 
-## Return Codes
+### Return Code Conventions
 
 Commands should return appropriate status codes:
 
 | Code | Meaning |
 |------|---------|
 | `0` | Success |
-| `>0` | Command-specific warning or status |
-| `<0` | Error condition |
-| `INT8_MIN` | Reserved for parser errors |
+| `!= 0` | Error condition |
 
-**Example:**
-```cpp
-CLI_COMMAND(setvalue) {
-    if (argc < 2) {
-        ioStream.println("Error: Missing argument");
-        return -1;  // Error
-    }
-    
-    int value = atoi(argv[1]);
-    if (value < 0 || value > 100) {
-        ioStream.println("Error: Value out of range");
-        return -2;  // Specific error code
-    }
-    
-    // Set the value
-    return 0;  // Success
-}
+When a command returns a non-zero value, libCli will print an error message:
 ```
+Error, cmd fails: <error code>
+``` 
 
-## Argument Parsing
+to the terminal, where `<error code>` is the value returned by the command. This allows users to implement their own error code scheme. 
 
-libCli supports advanced argument parsing:
+### Special Case: libCli Parser Errors:
 
-### Quoted Arguments
-
-Use quotes to include spaces in arguments:
-
-```
-command "argument with spaces" normal_arg
-```
-
-Becomes:
-- `argv[1]` = `"argument with spaces"`
-- `argv[2]` = `"normal_arg"`
-
-### Escaped Characters
-
-Use backslash to escape special characters:
-
-```
-command "quote: \" backslash: \\" arg
-```
-
-Supported escape sequences:
-- `\"` - Double quote
-- `\\` - Backslash
-- `\n` - Newline
-- `\t` - Tab
-- `\r` - Carriage return
-
-## VT100 Terminal Support
-
-libCli includes VT100 terminal support for enhanced interaction:
-
-### Supported Sequences
-
-| Input | Action |
-|-------|--------|
-| Backspace / DEL | Delete previous character |
-| Arrow Up | Previous command in history |
-| Arrow Down | Next command in history |
-| Ctrl+K | Clear current line |
-| Ctrl+L | Clear screen |
-
-### History Navigation
-
-The history buffer stores multiple commands based on available space:
-- Navigate with arrow keys
-- Stores commands as entered (preserves escaped characters)
-- Stores invalid commands (allows correction and retry)
-- Automatically overwrites oldest commands when full
-- Duplicate consecutive commands are filtered (v4.4.0+)
-
-## Error Handling
-
-### Common Error Scenarios
+in case of a parsing error (e.g., unterminated string, too many arguments), read() and loop() return `INT8_MIN` and print a specific error message to the terminal:
 
 **Command not found:**
 ```
@@ -494,6 +489,60 @@ Error: Unterminated string
 
 The buffer silently truncates at CLI_COMMANDSIZ-1 and rings the bell.
 
+**Example:**
+```cpp
+CLI_COMMAND(setvalue) {
+    if (argc < 2) {
+        ioStream.println("Error: Missing argument");
+        // Error
+        return -1;
+    }
+    
+    int value = atoi(argv[1]);
+    if (value < 0 || value > 100) {
+        ioStream.println("Error: Value out of range");
+        // Error
+        return -2;
+    }
+    
+    // Success
+    return 0;  
+}
+```
+
+## Argument Parsing
+
+libCli supports advanced argument parsing:
+
+### Quoted Arguments
+
+Use quotes to include spaces in arguments:
+
+```
+command "argument with spaces" normal_arg
+```
+
+Becomes:
+- `argv[1]` = `"argument with spaces"`
+- `argv[2]` = `"normal_arg"`
+
+### Escaped Characters
+
+Use backslash to escape special characters:
+
+Supported escape sequences:
+- `\"` - Double quote
+- `\\` - Backslash
+
+Example:
+```
+command "quote: \" backslash: \\" arg
+```
+Becomes:
+- `argv[1]` = `quote: " backslash: \`
+- `argv[2]` = `arg`
+
+
 ## Complete Example
 
 ```cpp
@@ -501,6 +550,11 @@ The buffer silently truncates at CLI_COMMANDSIZ-1 and rings the bell.
 #include <cli/cli.hpp>
 
 Cli cli;
+
+CLI_COMMAND(ver) {
+    ioStream.println("myApp version 1.0");
+    return 0;
+}
 
 CLI_COMMAND(help) {
     ioStream.println("Available commands:");
@@ -537,6 +591,11 @@ CLI_COMMAND(info) {
 void setup() {
     Serial.begin(115200);
     while (!Serial);
+
+    // Call by name at runtime without forward declaration
+    CliCommand::exec(Serial, "ver", nullptr, 0);
+    // Direct call without lookup depending on forward declaration
+    cmd_info(Serial, nullptr, 0);
     
     cli.begin();
     

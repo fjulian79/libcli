@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Added bash like command completion based on tab key
+    - Enabled by default, but can be disabled with `#define CLI_TAB_COMPLETION 0` to save flash memory
+    - very low RAM impact, more impact on flash memory.
+- Exposed more VT100 control sequences to users for enhanced terminal control (e.g., cursor movement)
+- Added Documentation for command registration
+
+### Changed
+- Refactored the code to clean up cli.cpp.
+- Updated and improved existing documentation
+
 ## [4.5.0] - 2026-04-09
 
 ### Added

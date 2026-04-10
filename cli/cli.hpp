@@ -184,6 +184,63 @@ class Cli {
         void argReset(void);
 
         /**
+         * @brief Handle tab completion for commands.
+         * 
+         * Finds matching commands in the command table and either:
+         * - Auto-completes if there's exactly one match
+         * - Completes to the common prefix if there are multiple matches
+         * - Shows all matches if no further completion is possible
+         */
+        void handleTabCompletion(void);
+
+        /**
+         * @brief Find all commands in the command table matching the current 
+         * buffer content.
+         * 
+         * @param matches Array to store pointers to matching command names
+         * @return Number of matches found
+         */
+        uint8_t findMatchingCommands(const char* matches[]);
+
+        /**
+         * @brief Complete a portion of a match.
+         * 
+         * This function updates the command buffer and prints the completed
+         * portion of the match to the terminal.
+         * 
+         * @param match The command name to complete
+         * @param len The length of the portion to complete
+         * @param addSpace Whether to add a space after completion (true for
+         *                 complete matches, false for partial/common prefix)
+         */
+        void completeMatch(const char* match, uint8_t len, bool addSpace);
+
+        /**
+         * @brief Compleate to the longest common prefix among multiple matches.
+         * 
+         * This function completes the command buffer to the longest common 
+         * prefix among the given matches.
+         * 
+         * @param matches Array of matching command names
+         * @param matchCount Number of matches in the array
+         */
+        void completeToCommonPrefix(const char* matches[], uint8_t matchCount);
+
+        /**
+         * @brief Display a list of matching commands with line wrapping.
+         * 
+         * @param matches Array of matching command names
+         * @param matchCount Number of matches to display
+         */
+        void displayMatchList(const char* matches[], uint8_t matchCount);
+
+        /**
+         * @brief Clear match lines displayed below the prompt.
+         * Called when Enter is pressed to clean up completion output.
+         */
+        void clearMatchLines(void);
+
+        /**
          * @brief The stream object to use for io operations.
          */
         Stream *pStream;
@@ -250,7 +307,23 @@ class Cli {
         uint8_t CmdTabSiz;
 
         /**
-         * @brief Ehe current echo state.
+         * @brief The current echo state.
          */
         bool EchoEnabled;
+
+#if CLI_TAB_COMPLETION != 0
+        /**
+         * @brief Tracks the buffer position where tab was last pressed.
+         * Used to detect double-tab for showing all matches.
+         * 0xFF means no recent tab completion.
+         */
+        uint8_t LastTabPos;
+
+        /**
+         * @brief Number of lines displayed below prompt for match output.
+         * Used to clear completion matches when Enter is pressed.
+         * 0 means no match lines are currently displayed.
+         */
+        uint8_t MatchLinesDisplayed;
+#endif
 };
