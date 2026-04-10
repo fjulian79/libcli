@@ -6,6 +6,9 @@
 
 ### Core Functionality
 - **Automatic Command Registration** - Define commands with `CLI_COMMAND(name)` macro, no manual table management
+  - Preprocessor-aware: only compiled code gets registered
+  - Cross-platform compatible: works on all Arduino platforms
+  - See [Command Registration](doc/COMMAND_REGISTRATION.md) for how it works
 - **Stream-Based I/O** - Works with any Arduino Stream (Serial, Telnet, WebSocket, etc.)
 - **Low Memory Footprint** - Configurable buffer sizes, ~400 bytes RAM with defaults
 - **Simple Integration** - Just `cli.begin()` and `cli.loop()` in your sketch
@@ -74,6 +77,14 @@ All buffers (command buffer, history buffer, command table) are sized at compile
 - **Automatic Registration** - `CLI_COMMAND(name)` macro eliminates manual command table management
 - **Clear Conventions** - Consistent patterns and predictable behavior
 
+### Cross-Platform Portability
+
+libCli uses **constructor-based command registration** instead of linker tricks or build scripts to ensure reliable operation across all Arduino platforms (STM32, ESP32, ESP8266, RP2040, AVR, SAMD, etc.). This approach is preprocessor-aware, meaning commands inside `#ifdef` blocks are only registered when actually compiled.
+
+Unlike Python script-based solutions that scan source code, libCli's registration respects the preprocessor. Disabled code is never registered, and the system works identically across different toolchains without requiring linker script modifications.
+
+For a detailed explanation of why this design was chosen and how it works, see [Command Registration](doc/COMMAND_REGISTRATION.md).
+
 ### Stream-Based Architecture
 
 Works with any Arduino `Stream` implementation - Serial, Telnet, WebSockets, or custom streams. Write once, use with any transport layer.
@@ -95,6 +106,7 @@ The demo runs on multiple platforms (see `platformio.ini` in the demo repository
 
 - **[API Reference](doc/API.md)** - Complete API documentation for all classes and methods
 - **[Configuration Guide](doc/CONFIGURATION.md)** - Detailed configuration options and memory considerations
+- **[Command Registration](doc/COMMAND_REGISTRATION.md)** - How automatic command registration works and why
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ## Quick Start

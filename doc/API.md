@@ -47,6 +47,12 @@ CLI_COMMAND(echo) {
 }
 ```
 
+**How does auto-registration work?**
+
+The `CLI_COMMAND` macro uses constructor-based registration via static C++ objects initialized before `main()`. This approach is preprocessor-aware and works across all Arduino platforms without requiring linker tricks or build scripts.
+
+For a detailed explanation of the registration mechanism, why this design was chosen over alternatives (Python scripts, linker sections), and how it handles conditional compilation, see [Command Registration](COMMAND_REGISTRATION.md).
+
 ### CLI_COMMAND_DEF(name)
 
 **Description:** Macro to only define the command signature without registration. Useful for forward declarations.
