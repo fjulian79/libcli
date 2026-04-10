@@ -116,6 +116,26 @@ class Cli {
         void clearLine(void);
 
         /**
+         * @brief Used to clear the entire screen and move the cursor to the
+         * first row and column.
+         */
+        void clearScreen(void);
+
+        /**
+         * @brief Used to save the current terminal cursor position.
+         * 
+         * This is a VT100 escape sequence, the position can be restored by 
+         * calling restoreCursor().
+         */
+        void saveCursor(void);
+
+        /**
+         * @brief Used to restore the terminal cursor to the position saved by
+         * saveCursor().
+         */
+        void restoreCursor(void);
+
+        /**
          * @brief Used to reset the internal state and print a clean prompt
          */
         void reset(void);

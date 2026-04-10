@@ -98,6 +98,11 @@ const struct {
      */
     const char stresc = '"';
 
+    /**
+     * @brief Definition of the tab character.
+     */
+    const char tab = '\t';
+
 } ascii;
 
 /**
@@ -122,6 +127,16 @@ const struct {
      * ED (Top to bottom) + CUP (line 1, column 1)
      */
     const char clrscr[11] = "\033[2J\033[1;1H";
+
+    /**
+     * @brief Save cursor position (DECSC)
+     */
+    const char savecur[3] = "\0337";
+
+    /**
+     * @brief Restore cursor position (DECRC)
+     */
+    const char restorecur[3] = "\0338";
 
 } vt100;
 
@@ -274,6 +289,18 @@ void Cli::refreshPrompt(void) {
 
 void Cli::clearLine(void) {
     pStream->write(vt100.clrline);
+}
+
+void Cli::clearScreen(void) {
+    pStream->write(vt100.clrscr);
+}
+
+void Cli::saveCursor(void) {
+    pStream->write(vt100.savecur);
+}
+
+void Cli::restoreCursor(void) {
+    pStream->write(vt100.restorecur);
 }
 
 bool Cli::restoreLastCmd(void) {
