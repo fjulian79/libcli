@@ -27,6 +27,8 @@
 
 #include <Arduino.h>
 #include "cli/cli.hpp"
+#include "cli/ascii.hpp"
+#include "cli/vt100.hpp"
 
 /**
  * If the output is buffered fflush has to be called after printf's without
@@ -41,104 +43,6 @@
 #define cli_fflush()
 
 #endif
-
-/**
- * @brief Defines special characters which are used in this context.
- */
-const struct {
-    /**
-     * @brief Definition of the character used to sepperate
-     */
-    const char argsep = ' ';
-
-    /**
-     * @brief Defines the sequence to echo to trigger ther terminal bell.
-     */
-    const char bell = '\a';
-
-    /**
-     * @brief Definition of the backspace character.
-     */
-    const char bs = '\b';
-
-    /**
-     * @brief Definition of the form feed character. Sent in case of ctrl-L.
-     */
-    const char ff = 0x0c;
-
-    /**
-     * @brief Defnition on the csi control sequence character.
-     */
-    const char csi = '[';
-
-    /**
-     * @brief Definition of the delete character.
-     */
-    const char del = 0x7f;
-
-    /**
-     * @brief Definition of the escape character.
-     */
-    const char esc = '\033';
-
-    /**
-     * @brief Defines the sequence to echo for a new line.
-     */
-    const char newline = '\n';
-
-    /**
-     * @brief Defintion of the character used to terminate a line.
-     */
-    const char ret = '\r';
-
-    /**
-     * @brief Character which is used to mark the begin and the end of a
-     * string which shall be recognized as singe argument althow it contains
-     * the character used to sperate arguments.
-     */
-    const char stresc = '"';
-
-    /**
-     * @brief Definition of the tab character.
-     */
-    const char tab = '\t';
-
-} ascii;
-
-/**
- * @brief Defines special vt100 control sequences.
- * See https://vt100.net/docs/vt510-rm/chapter4.html for details.
- */
-const struct {
-    /**
-     * @brief Used for echo a single delete to the terminal.
-     * Backspace + CSI Ps K, PS = 0
-     */
-    const char del[6] = "\b\033[0K";
-
-    /**
-     * @brief Used for echo a delete line to the terminal.
-     * Carriage Return + CSI Ps K, PS = 2
-     */
-    const char clrline[6] = "\r\033[2K";
-
-    /**
-     * @brief Used to clear the screen and rest the cursor to 1:1
-     * ED (Top to bottom) + CUP (line 1, column 1)
-     */
-    const char clrscr[11] = "\033[2J\033[1;1H";
-
-    /**
-     * @brief Save cursor position (DECSC)
-     */
-    const char savecur[3] = "\0337";
-
-    /**
-     * @brief Restore cursor position (DECRC)
-     */
-    const char restorecur[3] = "\0338";
-
-} vt100;
 
 Cli::Cli()
     : pStream(0),
