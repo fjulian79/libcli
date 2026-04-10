@@ -94,3 +94,15 @@
  */
 #define CLI_BUFFEREDIO              0
 #endif
+
+/**
+ * @brief Define cli_flush() based on the given CLI_BUFFEREDIO setting.
+ * 
+ * If the output is buffered fflush has to be called after printf's without
+ * a new line termination.
+ */
+#if CLI_BUFFEREDIO != 0
+#define cli_fflush()                pStream->flush()
+#else
+#define cli_fflush()
+#endif

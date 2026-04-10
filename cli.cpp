@@ -30,20 +30,6 @@
 #include "cli/ascii.hpp"
 #include "cli/vt100.hpp"
 
-/**
- * If the output is buffered fflush has to be called after printf's without
- * a new line termination.
- */
-#if CLI_BUFFEREDIO != 0
-
-#define cli_fflush()                pStream->flush()
-
-#else
-
-#define cli_fflush()
-
-#endif
-
 Cli::Cli()
     : pStream(0),
       EscMode(esc_false),
