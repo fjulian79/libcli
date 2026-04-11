@@ -90,13 +90,16 @@ Creates a new Cli instance.
 ### begin()
 
 ```cpp
-void begin(Stream *pIoStr = &Serial);
+void begin(Stream *pIoStr = &Serial, bool sortCmdTab = CLI_CMDTAB_SORTING_DEFAULT);
 ```
 
 Initializes the CLI with the specified I/O stream.
 
 **Parameters:**
 - `pIoStr` - Pointer to the Stream object to use (default: &Serial)
+- `sortCmdTab` - Whether to sort the command table (default: CLI_CMDTAB_SORTING_DEFAULT)
+
+Please note that the sortCmdTab parameter is optional and its default value depends on if command completion is enabled or not. CLI_CMDTAB_SORTING_DEFAULT is set to true if CLI_TAB_COMPLETION is enabled and to false if CLI_TAB_COMPLETION is disabled. This is because the command completion code relies on the command table being sorted to display commands in alphabetical order. It does not sort matches every time to save processing time. So if you enable command completion and don't provide a value for sortCmdTab, the command table will be sorted automatically. If you provide a value for sortCmdTab, it will be used regardless of the state of CLI_TAB_COMPLETION.
 
 **Example:**
 ```cpp
@@ -318,6 +321,22 @@ if (error_occurred) {
 Static class for accessing the command table and executing commands programmatically. 
 
 Usually libCLI users do not need to interact with this class directly because its main purpose is to manage and create the internal command table and provide access to it. However, it can be useful for advanced use cases such as dynamic command execution or custom command management.
+
+### sortTable()
+
+```cpp
+static void sortTable(void);
+```
+
+Sort the command table alphabetically by command name. This is called by `Cli::begin()` if its `sortCmdTab` parameter is `true`. The used sorting algorithm is qsort from the C standard library, which is efficient for small to medium-sized command tables. It has been choosen as it is good compromise between number of iterations and code size and because can be expected to be optimized by the standard library implementation.
+
+Usually users don't need to call this method directly, as sorting is handled automatically by `Cli::begin()`. However, it can be useful if you resuse the Class for your own command management and want to sort the table after adding or removing commands at runtime.
+
+**Example:*
+```cpp
+// After dynamically adding commands to the table
+CliCommand::sortTable();
+```
 
 ### getTable()
 

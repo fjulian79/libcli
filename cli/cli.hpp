@@ -51,8 +51,17 @@ class Cli {
          * command table, see README for further infos.
          *
          * @param pIoStr Optional, the stream to use for read and write.
+         * @param sortCmdTab Optional, whether to sort the command table during 
+         * initialization. If set to false, the command table will be used in 
+         * the order of registration, which is undefined. This is only relevant
+         * if command completion is enabled, as the command table should be 
+         * sorted to provide sorted coammnd suggestions. Sorting suggestions 
+         * on every command completion is not ideal, so the design is based on 
+         * the assumption that the command table is sorted during 
+         * initialization.
          */
-        void begin(Stream *pIoStr = &Serial);
+        void begin(Stream *pIoStr = &Serial, 
+                bool sortCmdTab = CLI_CMDTAB_SORTING_DEFAULT);
 
         /**
          * @brief Used to configure the io stream to use.

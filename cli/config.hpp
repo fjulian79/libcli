@@ -118,6 +118,17 @@
 #define CLI_TAB_COMPLETION          1
 #endif
 
+#if (CLI_TAB_COMPLETION != 0)
+/**
+ * @brief Define whether to sort the command table during initialization by 
+ * default. Please note that this is only the default if the user ommits the 
+ * parameter in the cli.begin() function.
+ */
+#define CLI_CMDTAB_SORTING_DEFAULT              true
+#else
+#define CLI_CMDTAB_SORTING_DEFAULT              false
+#endif
+
 #ifndef CLI_TERMINAL_WIDTH
 /**
  * @brief Defines the assumed terminal width in characters.

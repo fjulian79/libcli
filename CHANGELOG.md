@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added bash like command completion based on tab key
     - Enabled by default, but can be disabled with `#define CLI_TAB_COMPLETION 0` to save flash memory
     - very low RAM impact, more impact on flash memory.
+- Now sorting the command table if command completion is enabled to display matches in alphabetical order.
+    - Using the standard C library qsort (expected to be optimized and tested)
+    - Can be disabled via `Cli::begin()` method parameter.
 - Exposed more VT100 control sequences to users for enhanced terminal control (e.g., cursor movement)
 - Added Documentation for command registration
 

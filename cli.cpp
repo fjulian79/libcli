@@ -46,7 +46,7 @@ Cli::Cli()
     argReset();
 }
 
-void Cli::begin(Stream *pIoStr) {
+void Cli::begin(Stream *pIoStr, bool sortCmdTab) {
     BufIdx = 0;
     pCmdTab = CliCommand::getTable();
     CmdTabSiz = CliCommand::getCmdCnt();
@@ -55,6 +55,10 @@ void Cli::begin(Stream *pIoStr) {
     if (dropped != 0) {
         pIoStr->printf("WARNING: Cli Command table overflow, %d dropped!\n\n",
             dropped);
+    }
+
+    if (sortCmdTab) {
+        CliCommand::sortTable();
     }
 
     setStream(pIoStr);

@@ -84,6 +84,11 @@ class CliCommand {
         CliCommand(const char* name, CmdFuncPtr function);
 
         /**
+         * @brief Used to sort the global command table alphabetically.
+         */
+        static void sortTable(void);
+
+        /**
          * @brief Used to get the global command table.
          */
         static cliCmd_t* getTable(void);

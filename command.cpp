@@ -38,6 +38,30 @@ CliCommand::CliCommand(const char* name, CmdFuncPtr function) {
     }
 }
 
+/**
+ * @brief Used to compare two commands for sorting the command table.
+ * 
+ * Needed in this form for qsort, see sortTable function below.
+ */
+static int cmdCompare(const void* a, const void* b) {
+    return strcmp(((cliCmd_t*)a)->name, ((cliCmd_t*)b)->name);
+}
+
+void CliCommand::sortTable(void) {
+    /* Using qsort for O(n log n) performance instead of simpler alternatives:
+     * - Bubble Sort: O(n²) - simple but ~1225 comparisons at 50 commands
+     * - Insertion Sort: O(n²) - better for small/sorted data, still quadratic
+     * - Shell Sort: ~O(n^1.3) - good middle ground, but more complex
+     * - qsort: O(n log n) - only ~280 comparisons at 50 commands
+     * 
+     * While this is only called once during init, qsort scales better if users
+     * increase CLI_COMMANDS_MAX. The stdlib implementation is expected to be 
+     * well-tested and optimized. Stack usage from recursion is acceptable for
+     * one-time init.
+     */
+    qsort(CmdTab, CmdCnt, sizeof(cliCmd_t), cmdCompare);  
+}
+
 cliCmd_t* CliCommand::getTable(void) {
     return CmdTab;
 }
