@@ -197,10 +197,6 @@ void Cli::handleTabCompletion(void) {
  * or just send a bell. This keeps the core code (cli.cpp) free of #if's.
  */
 
-void Cli::clearMatchLines(void) {
-    /* Do nothing when tab completion is disabled */
-}
-
 void Cli::handleTabCompletion(void) {
     /* Send bell to indicate tab is not supported */
     sendBell();
