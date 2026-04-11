@@ -85,4 +85,9 @@ const struct {
      */
     const char tab = '\t';
 
+    /**
+     * @brief Definition of the vertical tab character. Sent in case of ctrl-K.
+     */
+    const char vt = '\v';
+
 } ascii;

@@ -110,6 +110,13 @@ int8_t Cli::read(char byte) {
         clearScreen();
         refreshPrompt();
     }
+    /* No escape so far but now vertical tab has been received. */
+    else if ((EscMode == esc_false) && (byte == ascii.vt)) {
+        BufIdx = 0;
+        Buffer[0] = '\0';
+        clearLine();
+        refreshPrompt();
+    }
     /* No escape so far but now Tab has been received. */
     else if ((EscMode == esc_false) && (byte == ascii.tab)) {
         handleTabCompletion();
