@@ -38,10 +38,6 @@ Cli::Cli()
       pCmdTab(0),
       CmdTabSiz(0),
       EchoEnabled(true)
-#if CLI_TAB_COMPLETION != 0
-      ,LastTabPos(0xFF),
-      MatchLinesDisplayed(0)
-#endif
 {
     argReset();
 }
@@ -86,9 +82,6 @@ int8_t Cli::read(char byte) {
     }
     /* No escape so far but comand terminator received */
     else if ((EscMode == esc_false) && (byte == ascii.ret)) {
-        /* Clear any displayed match lines first */
-        clearMatchLines();
-
         if(EchoEnabled) {
             pStream->write(ascii.newline);
         }
@@ -427,11 +420,6 @@ void Cli::argReset(void) {
 void Cli::reset(void) {
     BufIdx = 0;
     EscMode = esc_false;
-
-#if CLI_TAB_COMPLETION != 0
-    LastTabPos = 0xFF;
-    MatchLinesDisplayed = 0;
-#endif
 
 #if CLI_HISTORYSIZ > 0
     History.is_used = false;

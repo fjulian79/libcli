@@ -244,12 +244,6 @@ class Cli {
         void displayMatchList(const char* matches[], uint8_t matchCount);
 
         /**
-         * @brief Clear match lines displayed below the prompt.
-         * Called when Enter is pressed to clean up completion output.
-         */
-        void clearMatchLines(void);
-
-        /**
          * @brief The stream object to use for io operations.
          */
         Stream *pStream;
@@ -319,20 +313,4 @@ class Cli {
          * @brief The current echo state.
          */
         bool EchoEnabled;
-
-#if CLI_TAB_COMPLETION != 0
-        /**
-         * @brief Tracks the buffer position where tab was last pressed.
-         * Used to detect double-tab for showing all matches.
-         * 0xFF means no recent tab completion.
-         */
-        uint8_t LastTabPos;
-
-        /**
-         * @brief Number of lines displayed below prompt for match output.
-         * Used to clear completion matches when Enter is pressed.
-         * 0 means no match lines are currently displayed.
-         */
-        uint8_t MatchLinesDisplayed;
-#endif
 };

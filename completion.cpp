@@ -29,21 +29,6 @@
 
 #if CLI_TAB_COMPLETION != 0
 
-void Cli::clearMatchLines(void) {
-    if (MatchLinesDisplayed != 0) {
-        saveCursor();
-
-        for (uint8_t i = 0; i < MatchLinesDisplayed; i++) {
-            pStream->write(ascii.newline);
-            clearLine();
-        }
-        
-        restoreCursor();
-        MatchLinesDisplayed = 0;
-        cli_fflush();
-    }
-}
-
 uint8_t Cli::findMatchingCommands(const char* matches[]) {
     uint8_t matchCount = 0;
 
@@ -72,8 +57,7 @@ void Cli::completeMatch(const char* match, uint8_t len, bool addSpace) {
             pStream->write(ascii.argsep);
         }
     }
-    
-    LastTabPos = 0xFF;
+
     cli_fflush();
 }
 
@@ -119,52 +103,59 @@ void Cli::completeToCommonPrefix(const char* matches[], uint8_t matchCount) {
 }
 
 void Cli::displayMatchList(const char* matches[], uint8_t matchCount) {
-    uint8_t currentLinePos = 0;
-    uint8_t linesUsed = 1;
-    const uint8_t spacing = 2;
+    /* Display matches in aligned columns, similar to bash completion.
+     * Uses column-wise layout (filling down first, then right) rather than
+     * row-wise. This makes it easier to scan sorted lists vertically for
+     * similar command names. */
+    
+    const uint8_t spacing = 3;  /* Minimum spaces between columns */
+    uint8_t maxLen = 0;
+    uint8_t colWidth = 0;
+    uint8_t numCols = 0;
+    uint8_t numRows = 0;
 
-    /* Clear any previously displayed matches to avoid remaining artifacts if 
-     * the new match list is shorter than the previous one */
-    if (MatchLinesDisplayed > 0) {
-        clearMatchLines();
-    }
-
-    /* Use VT100 cursor save/restore to show matches below current line as it is
-     * done in common linux shells .. why not reaching for stars? :-) */
-    saveCursor();
-
-    pStream->write(ascii.newline);
+    /* Find the longest match to determine column width */
     for (uint8_t i = 0; i < matchCount; i++) {
-        uint8_t matchLen = strlen(matches[i]);
-        uint8_t neededSpace = matchLen + (i < matchCount - 1 ? spacing : 0);
-
-        /* Start a new line if the current line would get too long, but if the 
-         * first match on a line is already too long, there is nothing we can
-         * do about it. Print it although it is too long */
-        if ((currentLinePos > 0) && 
-            ((currentLinePos + neededSpace) > CLI_TERMINAL_WIDTH)) {
-            pStream->write(ascii.newline);
-            linesUsed++;
-            currentLinePos = 0;
+        uint8_t len = strlen(matches[i]);
+        if (len > maxLen) {
+            maxLen = len;
         }
-
-        /* Output the match */
-        pStream->printf("%s", matches[i]);
-        currentLinePos += matchLen;
-        
-        /* Add spacing if not the last match */
-        if (i < matchCount - 1) {
-            for (uint8_t j = 0; j < spacing; j++) {
-                pStream->write(ascii.argsep);
-                currentLinePos++;
+    }
+    
+    /* Calculate column width, number of columns and number of rows, but ensure 
+     * at least one column and one row */
+    colWidth = maxLen + spacing;
+    numCols = CLI_TERMINAL_WIDTH / colWidth;
+    if (numCols == 0) {
+        numCols = 1;
+    }
+    numRows = (matchCount + numCols - 1) / numCols;
+    
+    /* Output matches column-wise: iterate rows, then columns */
+    pStream->write(ascii.newline);
+    for (uint8_t row = 0; row < numRows; row++) {
+        for (uint8_t col = 0; col < numCols; col++) {
+            /* Calculate index: column-wise means idx = row + col * numRows */
+            uint8_t idx = row + col * numRows;
+            
+            /* Check if this cell has a valid match. The last row may be 
+             * incomplete */
+            if (idx < matchCount) {
+                pStream->printf("%s", matches[idx]); 
+                /* Add padding to align columns, except for last column */
+                if (col < numCols - 1 && idx + numRows < matchCount) {
+                    uint8_t len = strlen(matches[idx]);
+                    uint8_t padding = colWidth - len;
+                    for (uint8_t j = 0; j < padding; j++) {
+                        pStream->write(' ');
+                    }
+                }
             }
         }
+        pStream->write(ascii.newline);
     }
-
-    restoreCursor();
-    MatchLinesDisplayed = linesUsed;
-    LastTabPos = 0xFF;
-    cli_fflush();
+    
+    refreshPrompt();
 }
 
 void Cli::handleTabCompletion(void) {
@@ -188,14 +179,12 @@ void Cli::handleTabCompletion(void) {
     if (matchCount == 0) {
         /* No matches found */
         sendBell();
-        LastTabPos = 0xFF;
     } else if (matchCount == 1) {
         /* Exactly one match, complete it and add a space */
         completeMatch(matches[0], strlen(matches[0]), true);
     } else {
         /* Multiple matches, complete to the longest common prefix */
-        completeToCommonPrefix(matches, matchCount);
-                
+        completeToCommonPrefix(matches, matchCount);                
         /* There is more than one match possible, show the list */
         displayMatchList(matches, matchCount);
     }
