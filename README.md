@@ -19,12 +19,13 @@
   - Preserves escaped characters
   - Stores invalid commands for easy correction
   - Automatic duplicate filtering (consecutive identical commands)
+  - Optional feature: Can be disabled to save RAM and flash memory
 - **Tab Completion** - Bash-like command completion
   - Press Tab to auto-complete commands
   - Single match: Completes and adds space for argument input
   - Line wrapping respects terminal width
   - VT100 cursor control for seamless editing
-  - Optional feature: Can be disabled to save ~776 bytes flash (measured on RP2040)
+  - Optional feature: Can be disabled to save flash memory
 - **VT100 Terminal Support** - Standard terminal sequences for better usability
   - Arrow Up/Down: Navigate command history
   - Tab: Auto-complete commands

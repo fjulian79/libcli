@@ -73,7 +73,7 @@ The history stores multiple commands in a circular buffer. The number of command
 **Disabling History:**
 Set to `0` to completely disable command history support. This saves memory (measured on RP2040):
 - **~224 bytes RAM** (buffer + pointers)
-- **~824 bytes Flash** (entire history implementation removed by linker)
+- **~816 bytes Flash** (entire history implementation removed by linker)
 
 Actual savings may vary depending on platform, compiler, and optimization settings.
 
@@ -140,7 +140,7 @@ When enabled (default), pressing Tab will:
 When disabled, pressing Tab will just trigger a bell sound.
 
 **Memory Savings:**
-Disabling tab completion saves approximately **~776 bytes of flash memory** (measured on RP2040) by removing the entire completion implementation. RAM savings are negligible (state tracking variables are optimized away by the compiler when disabled).
+Disabling tab completion saves approximately **~712 bytes of flash memory** (measured on RP2040) by removing the entire completion implementation. RAM savings are negligible (state tracking variables are optimized away by the compiler when disabled).
 
 **Example:**
 ```cpp
@@ -203,7 +203,7 @@ With history disabled (approximate):
 - Misc (pointers, counters, state): ~12 bytes
 - **Total: ~212 bytes** (plus compiler padding/alignment)
 
-**Measured on RP2040:** Disabling history saves ~224 bytes RAM + ~824 bytes Flash.  
+**Measured on RP2040:** Disabling history saves ~224 bytes RAM + ~816 bytes Flash.  
 (Actual values depend on platform, compiler, optimization, and struct alignment.)
 
 ### Optimization Tips

@@ -112,7 +112,7 @@
  * @brief Enable or disable tab completion feature.
  * 
  * Set to 1 to enable bash-like tab completion (default).
- * Set to 0 to disable and save ~400 bytes of flash memory.
+ * Set to 0 to disable and save flash memory.
  * When disabled, tab key will just trigger a bell.
  */
 #define CLI_TAB_COMPLETION          1

@@ -269,9 +269,9 @@ void saveCursor(void);
 ```
 
 Save the current terminal cursor position using VT100 escape sequences (DECSC). The position can be restored later with `restoreCursor()`.
+Be aware that not all terminals support this feature at all, and behavior may be inconsistent if `restoreCursor()` is called without a prior `saveCursor()`.
 
 **Use Cases:**
-- Within libCli for printing completion matches while preserving the prompt position
 - Multi-line status displays
 
 **Example:**
@@ -288,6 +288,7 @@ void restoreCursor(void);
 ```
 
 Restore the terminal cursor to the position previously saved by `saveCursor()` using VT100 escape sequences (DECRC).
+Be aware that not all terminals support this feature at all, and behavior may be inconsistent if `restoreCursor()` is called without a prior `saveCursor()`.
 
 **Note:** Must be called after `saveCursor()`, otherwise behavior is terminal-dependent.
 

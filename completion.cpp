@@ -161,7 +161,6 @@ void Cli::displayMatchList(const char* matches[], uint8_t matchCount) {
 void Cli::handleTabCompletion(void) {
     const char* matches[CLI_COMMANDS_MAX];
     uint8_t matchCount = 0;
-    uint8_t commonLen = 0;
 
     if (BufIdx == 0) {
         /* No input yet, nothing to complete. What could be done is to show all 
