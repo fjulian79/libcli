@@ -2,6 +2,14 @@
 
 **A feature-rich yet lightweight and resource-conscious CLI implementation specifically designed for bare-metal embedded systems based on Arduino.**
 
+## Branch Description and Status
+
+This is the zsh-completion branch. 
+
+I created this branch to save the accomplishments of the zsh-like tab completion implementation, which works fine when using it in a 2026-04 Visual Studio PlatformIO Serial Monitor, but causes issues when using it with picocom or minicom as the 'magical' vt100 cursor control sequences (savecursor and restorecursor) are not properly handled. As a result the cursor behavior is wrong and it jumps around. However, In the VS Code Serial monitor it works fine and is pretty cool so I don't want to lose the code, but it can't be the default implementation. On the main branch I will switch to a more bash like implementation which does not depend on cursor control sequences, but still provides intelligent tab completion with line wrapping and a nice user experience. 
+
+I may revisit this branch in the future in case the VT100 become widely supported in terminal emulators .. maybe this will never happen. Expect this branch to be stale.
+
 ## Features
 
 ### Core Functionality
@@ -19,7 +27,7 @@
   - Preserves escaped characters
   - Stores invalid commands for easy correction
   - Automatic duplicate filtering (consecutive identical commands)
-- **Tab Completion** - Bash-like command completion
+- **Tab Completion** - zsh-like command completion
   - Press Tab to auto-complete commands
   - Single match: Completes and adds space for argument input
   - Line wrapping respects terminal width
