@@ -178,14 +178,31 @@ class Cli {
         int8_t checkCmdTable(void);
 
         /**
-         * @brief Used to check the for a specific command.
+         * @brief Used to check whether a specific command's name matches the
+         * current input buffer. Does not touch Buffer, Argv or Argc, on a
+         * match call parseArgs() to parse the arguments.
          *
          * @param pCmd      Pointer to a command defintion
          *
-         * @return true     In case of a match.
-         * @return false    In case of a missmatch, or parsing error.
+         * @return true     In case of a name match.
+         * @return false    In case of a mismatch.
          */
         bool checkCmd(cliCmd_t *pCmd);
+
+        /**
+         * @brief Used to parse the arguments following a matched command
+         * name into Argv/Argc. Destructively modifies Buffer in place.
+         *
+         * On failure a specific error message has already been printed to
+         * the stream, the caller shall not print an additional one.
+         *
+         * @param startIdx  Index in Buffer where the arguments begin, i.e.
+         *                  the length of the matched command name.
+         *
+         * @return true     In case of sucessful parsing.
+         * @return false    In case of a parsing error.
+         */
+        bool parseArgs(uint8_t startIdx);
 
         /**
          * @brief Used reset argc and argv

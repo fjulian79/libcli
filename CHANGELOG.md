@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Compile-time validation for `CLI_COMMANDSIZ` to prevent silent buffer-index overflow (must be <= 256, since the internal index is a `uint8_t`)
 
+### Fixed
+- A command whose name matched but whose arguments failed to parse (too many arguments, unterminated string) no longer falls through to a misleading "unknown command" error printed against the already-mangled buffer
+
 ## [4.6.0] - 2026-04-11
 
 ### Added

@@ -301,8 +301,8 @@ int8_t Cli::checkCmdTable(void)
 
     for(i=0; i<CmdTabSiz; i++) {
         if (checkCmd(&pCmdTab[i])) {
-            if (Argc > CLI_ARGVSIZ){
-                pStream->printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
+            if (!parseArgs(strlen(pCmdTab[i].name))) {
+                /* parseArgs() has already printed a specific error message */
                 ret=INT8_MIN;
                 goto out_2;
             }
@@ -330,8 +330,6 @@ int8_t Cli::checkCmdTable(void)
 
 bool Cli::checkCmd(cliCmd_t *p_cmd) {
     uint8_t i = 0;
-    uint8_t j = 0;
-    bool string=false;
 
     if(!p_cmd->name[0]) {
         /* the command is empty */
@@ -351,6 +349,14 @@ bool Cli::checkCmd(cliCmd_t *p_cmd) {
         /* the given command is longer then the expected command */
         return false;
     }
+
+    return true;
+}
+
+bool Cli::parseArgs(uint8_t startIdx) {
+    uint8_t i = startIdx;
+    uint8_t j = 0;
+    bool string = false;
 
     argReset();
 
