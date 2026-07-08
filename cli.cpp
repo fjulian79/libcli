@@ -129,31 +129,41 @@ int8_t Cli::read(char byte) {
     else if (EscMode == esc_csi) {
         /* See https://vt100.net/docs/vt510-rm/chapter4.html for a list thing
          * which could be done here
+         *
+         * A CSI sequence may carry parameter bytes (0x30-0x3F, e.g. digits
+         * or ';') before the final byte (0x40-0x7E) which terminates the
+         * sequence, e.g. the Delete key sends ESC [ 3 ~. Parameter bytes
+         * are consumed and ignored here so they don't leak into Buffer as
+         * ordinary input, only the final byte is acted upon.
          */
-        switch (byte) {
-            case 'A':
-                /* Up Key pressed */
-                restoreLastCmd();
-                break;
+        if (byte >= 0x30 && byte <= 0x3F) {
+            /* Parameter byte, keep waiting for the final byte */
+        } else {
+            switch (byte) {
+                case 'A':
+                    /* Up Key pressed */
+                    restoreLastCmd();
+                    break;
 
-            case 'B':
-                /* Down Key pressed */
-                restoreNextCmd();
-                break;
+                case 'B':
+                    /* Down Key pressed */
+                    restoreNextCmd();
+                    break;
 
-            case 'C':
-                /* Right Key pressed */
-                break;
+                case 'C':
+                    /* Right Key pressed */
+                    break;
 
-            case 'D':
-                /* Left Key pressed */
-                break;
+                case 'D':
+                    /* Left Key pressed */
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
+
+            EscMode = esc_false;
         }
-
-        EscMode = esc_false;
     }
     /* All special cases processed treat it like data */
     else {
