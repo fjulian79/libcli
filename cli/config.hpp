@@ -47,6 +47,14 @@
 #define CLI_COMMANDSIZ              100
 #endif
 
+/**
+ * @brief The command buffer write index (Cli::BufIdx) is a uint8_t, so it
+ * can only address up to 256 bytes. A larger CLI_COMMANDSIZ would silently
+ * wrap the index instead of failing loudly.
+ */
+static_assert(CLI_COMMANDSIZ <= 256,
+    "CLI_COMMANDSIZ must be <= 256, the internal buffer index is a uint8_t");
+
 #ifndef CLI_HISTORYSIZ
 /**
  * @brief Defines the size of the command history ringbuffer in bytes.

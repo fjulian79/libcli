@@ -58,6 +58,8 @@ If you define more commands than this limit, the excess commands will be dropped
 
 This defines the size of the input buffer. Commands longer than this will be truncated.
 
+**Note:** The command buffer write index is a `uint8_t`, so it can only address up to 256 bytes. A larger `CLI_COMMANDSIZ` would silently wrap the index instead of failing loudly. A compile-time check is in place to prevent this.
+
 **Example:**
 ```cpp
 #define CLI_COMMANDSIZ      200  // Allow longer commands
