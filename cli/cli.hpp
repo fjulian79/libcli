@@ -99,9 +99,16 @@ class Cli {
         int8_t read(char byte);
 
         /**
-         * @brief Turn echo either on or off. If disabled all kind of echo by
-         * this library is supressed. Inteded for interaction with a host
-         * application.
+         * @brief Turn per-character echo of user input either on or off.
+         *
+         * When disabled, characters typed by the user (including backspace
+         * and tab-completion) are no longer echoed back automatically. This
+         * does NOT suppress everything: prompts, the bell signal, error
+         * messages and the tab-completion match list are always written by
+         * the library regardless of this setting, as they originate from
+         * the library itself rather than being an echo of user input.
+         * Intended for a host application that drives the CLI
+         * programmatically and handles its own echo.
          *
          * @param state
          */
@@ -327,7 +334,7 @@ class Cli {
         uint8_t CmdTabSiz;
 
         /**
-         * @brief The current echo state.
+         * @brief The current per-character input echo state, see setEcho().
          */
         bool EchoEnabled;
 };

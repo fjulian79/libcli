@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - A command whose name matched but whose arguments failed to parse (too many arguments, unterminated string) no longer falls through to a misleading "unknown command" error printed against the already-mangled buffer
 
+### Changed
+- Clarified `setEcho()` documentation: it only suppresses per-character echo of user input, not prompts, bell signals, error messages or the tab-completion match list. Removed the misleading "password input" use case, as buffer content is still unconditionally reprinted by history navigation and Ctrl+L
+
 ## [4.6.0] - 2026-04-11
 
 ### Added

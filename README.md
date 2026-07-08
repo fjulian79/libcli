@@ -243,9 +243,10 @@ cli.setStream(&Serial);
 
 ### Disabling Echo
 
-Useful for machine-to-machine communication:
+Suppresses the per-character echo of user input, useful when a hostapplication drives the CLI programmatically and handles its own echo. Note this only affects the echo of typed characters - prompts, the bell signal, error messages and the tab-completion match list are always written regardless of this setting. It is therefore **not** suitable for masking password input, since e.g. history navigation or Ctrl+L still reprint the current buffer unconditionally.
+
 ```cpp
-cli.setEcho(false);  // No terminal echo
+cli.setEcho(false);  // No character echo
 // Process commands
 cli.setEcho(true);   // Re-enable
 ```

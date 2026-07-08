@@ -180,21 +180,21 @@ cli.setStream(&telnetStream);
 void setEcho(bool state);
 ```
 
-Enable or disable echo mode. When disabled, all terminal echo is suppressed.
+Enable or disable per-character echo of user input. 
+
+When disabled, characters typed by the user (including backspace and tab-completion) are no longer echoed back automatically. This does **not** suppress everything the library writes: prompts, the bell signal, error messages and the tab-completion match list are always written regardless of this setting, since they originate from the library itself rather than being an echo of user input. Do not rely on this for password input - pressing arrow-up (history) or Ctrl+L (clear screen) still triggers `refreshPrompt()`, which unconditionally writes the current buffer content.
 
 **Parameters:**
-- `state` - `true` to enable echo, `false` to disable
+- `state` - `true` to enable character echo, `false` to disable
 
 **Use Cases:**
-- Disable for machine-to-machine communication
-- Disable during password input
-- Disable for applications that handle echo themselves
+- A host application driving the CLI programmatically that handles its own echo
 
 **Example:**
 ```cpp
-cli.setEcho(false);  // Disable echo for password input
-// Get password
-cli.setEcho(true);   // Re-enable echo
+cli.setEcho(false);  // Disable character echo
+// Process commands
+cli.setEcho(true);   // Re-enable
 ```
 
 ### sendBell()
