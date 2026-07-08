@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - A command whose name matched but whose arguments failed to parse (too many arguments, unterminated string) no longer falls through to a misleading "unknown command" error printed against the already-mangled buffer
 - CSI escape sequences carrying parameter bytes (e.g. `ESC [ 3 ~` sent by the Delete key) no longer leak their trailing byte into the command buffer as ordinary input
+- Fixed documentation across README.md, API.md, CONFIGURATION.md and COMMAND_REGISTRATION.md that incorrectly claimed `argv[0]`/`argc` include the command name (Unix `main()` convention). The actual, established convention is that the command name is never part of `argv`/`argc` - some example code (`setvalue`, `led`, `echo`) was actually wrong under the real convention and has been corrected. API.md now also documents why this deliberately deviates from Unix: a command already knows its own name statically via `CLI_COMMAND(name)`, so repeating it in `argv` would only waste a `CLI_ARGVSIZ` slot
 
 ### Changed
 - Clarified `setEcho()` documentation: it only suppresses per-character echo of user input, not prompts, bell signals, error messages or the tab-completion match list. Removed the misleading "password input" use case, as buffer content is still unconditionally reprinted by history navigation and Ctrl+L

@@ -173,8 +173,12 @@ int8_t cmd_<name>(Stream& ioStream, const char *argv[], uint8_t argc)
 ```
 
 - **ioStream** - Use for all I/O operations (`printf`, `println`, etc.)
-- **argv** - Array of arguments (argv[0] is command name)
-- **argc** - Number of arguments including command name
+- **argv** - Array of arguments, `argv[0]` is the first argument *after* the
+  command name, not the command name itself. Unlike Unix `main(argc, argv)`,
+  the name is deliberately excluded - it's already known statically via
+  `CLI_COMMAND(name)`, so repeating it would waste a `CLI_ARGVSIZ` slot for
+  no benefit. See [API.md](doc/API.md#argv) for details.
+- **argc** - Number of arguments, excluding the command name
 - **return** - 0 for success, negative for errors
 
 See [API.md](doc/API.md) for complete details.
@@ -253,9 +257,11 @@ cli.setEcho(true);   // Re-enable
 
 ### Programmatic Command Execution
 
+The command name is looked up separately, so it is not part of `argv`, just
+like an interactively typed command never sees its own name in `argv[0]`:
 ```cpp
-const char* args[] = {"status", "verbose"};
-int8_t result = CliCommand::exec(Serial, "status", args, 2);
+const char* args[] = {"verbose"};
+int8_t result = CliCommand::exec(Serial, "status", args, 1);
 ```
 
 ### Checking Registered Commands

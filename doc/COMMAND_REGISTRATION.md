@@ -275,8 +275,8 @@ All these platforms support C++ static initialization, making the solution unive
 **Your code:**
 ```cpp
 CLI_COMMAND(led) {
-    if (argc < 2) return -1;
-    digitalWrite(LED_BUILTIN, atoi(argv[1]));
+    if (argc < 1) return -1;
+    digitalWrite(LED_BUILTIN, atoi(argv[0]));
     return 0;
 }
 ```
@@ -286,8 +286,8 @@ CLI_COMMAND(led) {
 int8_t cmd_led(Stream& ioStream, const char *argv[], uint8_t argc);
 static CliCommand led_registrar("led", cmd_led);
 int8_t cmd_led(Stream& ioStream, const char *argv[], uint8_t argc) {
-    if (argc < 2) return -1;
-    digitalWrite(LED_BUILTIN, atoi(argv[1]));
+    if (argc < 1) return -1;
+    digitalWrite(LED_BUILTIN, atoi(argv[0]));
     return 0;
 }
 ```

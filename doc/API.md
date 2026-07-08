@@ -19,8 +19,11 @@ This file is intended to provide infos on the public API of libCli which is inte
 **Usage:**
 ```cpp
 CLI_COMMAND(commandname) {
-    // Command implementation
-    ioStream.printf("Hello from %s\n", argv[0]);
+    // Command implementation. Note: argv[0] is the first argument, if any,
+    // NOT the command name itself - see Command Function Signature below.
+    if (argc > 0) {
+        ioStream.printf("First argument: %s\n", argv[0]);
+    }
     return 0;
 }
 ```
@@ -39,7 +42,7 @@ CLI_COMMAND(status) {
 }
 
 CLI_COMMAND(echo) {
-    for (uint8_t i = 1; i < argc; i++) {
+    for (uint8_t i = 0; i < argc; i++) {
         ioStream.printf("%s ", argv[i]);
     }
     ioStream.println();
@@ -421,15 +424,16 @@ Execute a command programmatically by name.
 **Parameters:**
 - `ioStream` - Stream object for I/O
 - `name` - Command name to execute
-- `argv` - Argument array
-- `argc` - Number of arguments
+- `argv` - Argument array; must NOT include the command name, exactly like
+  the array the command receives when invoked interactively
+- `argc` - Number of arguments, excluding the command name
 
 **Returns:** Command return code or error
 
 **Example:**
 ```cpp
-const char* args[] = {"status", "verbose"};
-int8_t result = CliCommand::exec(Serial, "status", args, 2);
+const char* args[] = {"verbose"};
+int8_t result = CliCommand::exec(Serial, "status", args, 1);
 ```
 
 ## Command Function Signature
@@ -453,19 +457,28 @@ ioStream.write(buffer, length);
 ```
 
 ### argv
-Array of argument strings. `argv[0]` is always the command name.
+Array of argument strings. `argv[0]` is the first argument *after* the
+command name - the command name itself is never part of `argv`. This
+differs from the traditional Unix `main(argc, argv)` convention where
+`argv[0]` is the program name; keep that in mind when porting code.
+
+This is a deliberate deviation, not an oversight: in Unix, a process needs
+`argv[0]` because it has no other reliable way to learn its own name (it may
+be invoked via different symlinks, paths, etc). A libCli command already
+knows its own name statically - it's the argument to `CLI_COMMAND(name)` -
+so repeating it in `argv` would only waste one of the limited `CLI_ARGVSIZ`
+slots and force every command to skip `argv[0]`/`argc - 1` for no benefit.
 
 **Example:**
-For input `"status system verbose"`:
-- `argv[0]` = `"status"`
-- `argv[1]` = `"system"`
-- `argv[2]` = `"verbose"`
+For input `"status system verbose"` (command `status`):
+- `argv[0]` = `"system"`
+- `argv[1]` = `"verbose"`
 
 ### argc
-Number of arguments including the command name.
+Number of arguments, excluding the command name.
 
 **Example:**
-For input `"status system verbose"`: `argc = 3`
+For input `"status system verbose"` (command `status`): `argc = 2`
 
 ### Return Code Conventions
 
@@ -512,13 +525,13 @@ The buffer silently truncates at CLI_COMMANDSIZ-1 and rings the bell.
 **Example:**
 ```cpp
 CLI_COMMAND(setvalue) {
-    if (argc < 2) {
+    if (argc < 1) {
         ioStream.println("Error: Missing argument");
         // Error
         return -1;
     }
     
-    int value = atoi(argv[1]);
+    int value = atoi(argv[0]);
     if (value < 0 || value > 100) {
         ioStream.println("Error: Value out of range");
         // Error
@@ -543,8 +556,8 @@ command "argument with spaces" normal_arg
 ```
 
 Becomes:
-- `argv[1]` = `"argument with spaces"`
-- `argv[2]` = `"normal_arg"`
+- `argv[0]` = `"argument with spaces"`
+- `argv[1]` = `"normal_arg"`
 
 ### Escaped Characters
 
@@ -559,8 +572,8 @@ Example:
 command "quote: \" backslash: \\" arg
 ```
 Becomes:
-- `argv[1]` = `quote: " backslash: \`
-- `argv[2]` = `arg`
+- `argv[0]` = `quote: " backslash: \`
+- `argv[1]` = `arg`
 
 
 ## Complete Example
@@ -589,8 +602,8 @@ CLI_COMMAND(help) {
 }
 
 CLI_COMMAND(echo) {
-    for (uint8_t i = 1; i < argc; i++) {
-        if (i > 1) ioStream.print(" ");
+    for (uint8_t i = 0; i < argc; i++) {
+        if (i > 0) ioStream.print(" ");
         ioStream.print(argv[i]);
     }
     ioStream.println();

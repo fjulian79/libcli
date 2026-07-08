@@ -98,7 +98,7 @@ Values between 1 and CLI_COMMANDSIZ-1 will trigger a compile warning and be forc
 **Default:** `4`  
 **Description:** Maximum number of arguments that can be passed to a command.
 
-This includes the command name itself (argv[0]). So with the default of 4, you can have the command plus 3 arguments.
+The command name itself is not counted, only the arguments following it. So with the default of 4, a command can be given up to 4 arguments.
 
 **Example:**
 ```cpp
