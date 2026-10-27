@@ -38,8 +38,8 @@
 ### Argument Parsing
 - **Flexible Arguments** - Up to 4 arguments by default (configurable)
 - **Quoted Strings** - Support for arguments with spaces: `cmd "arg with spaces"`
-- **Escape Sequences** - Handle special characters: `\"`, `\\`, `\n`, `\t`, `\r`
-- **Configurable Separator** - Space by default, but can be changed
+- **Escape Sequences** - Within quoted strings `\"` and `\\` stand for a quote and a backslash: `cmd "say \"hi\""`
+- **Leading Whitespace** - Ignored, so pasted indented commands just work
 
 ### Configuration
 - **Header-Based Config** - Override defaults via `cli_config.hpp`
@@ -89,7 +89,9 @@ All buffers (command buffer, history buffer, command table) are sized at compile
 
 ### Cross-Platform Portability
 
-libCli uses **constructor-based command registration** instead of linker tricks or build scripts to ensure reliable operation across all Arduino platforms (STM32, ESP32, ESP8266, RP2040, AVR, SAMD, etc.). This approach is preprocessor-aware, meaning commands inside `#ifdef` blocks are only registered when actually compiled.
+libCli uses **constructor-based command registration** instead of linker tricks or build scripts to ensure reliable operation across all Arduino platforms. This approach is preprocessor-aware, meaning commands inside `#ifdef` blocks are only registered when actually compiled.
+
+libCli requires an Arduino core whose `Print` class provides `printf()`, which is the case for ESP32, ESP8266, RP2040 (Earle Philhower) and STM32 (STM32duino). The AVR and SAMD cores lack it.
 
 Unlike Python script-based solutions that scan source code, libCli's registration respects the preprocessor. Disabled code is never registered, and the system works identically across different toolchains without requiring linker script modifications.
 

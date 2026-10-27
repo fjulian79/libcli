@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An empty string argument (`""`) was reported as unterminated string
 - An escaped quote at the start of a string argument (`"\"hi\""`) was not unescaped
 - Format warning in the command table overflow message of `Cli::begin()`
+- The README claimed escape sequences `\n`, `\t`, `\r`, a configurable argument separator and support for AVR and SAMD, which do not exist
 
 ## [4.7.0] - 2026-07-08
 
