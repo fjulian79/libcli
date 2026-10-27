@@ -117,8 +117,24 @@ int8_t Cli::read(char byte) {
     else if ((EscMode == esc_true) && (byte == ascii.csi)) {
         EscMode = esc_csi;
     }
+    /* Escape received and now the SS3 character */
+    else if ((EscMode == esc_true) && (byte == ascii.ss3)) {
+        EscMode = esc_ss3;
+    }
+    /* Escape received but neither a CSI nor a SS3 sequence follows */
+    else if (EscMode == esc_true) {
+        EscMode = esc_false;
+
+        if (byte < 0x20 || byte > 0x7E) {
+            /* A control character, e.g. ESC followed by Enter or another ESC,
+             * terminates the escape sequence and is processed as usual */
+            ret = read(byte);
+        }
+        /* Otherwise it is the second byte of Alt+<key>, ignore it so it does
+         * not leak into Buffer as ordinary input */
+    }
     /* Handle a ANSI escape sequence */
-    else if (EscMode == esc_csi) {
+    else if ((EscMode == esc_csi) || (EscMode == esc_ss3)) {
         /* See https://vt100.net/docs/vt510-rm/chapter4.html for a list thing
          * which could be done here
          *
@@ -127,6 +143,10 @@ int8_t Cli::read(char byte) {
          * sequence, e.g. the Delete key sends ESC [ 3 ~. Parameter bytes
          * are consumed and ignored here so they don't leak into Buffer as
          * ordinary input, only the final byte is acted upon.
+         *
+         * Terminals in application cursor mode send the cursor keys as SS3
+         * sequence instead, e.g. ESC O A for the Up key, which has the same
+         * final bytes but no parameters.
          */
         if (byte >= 0x30 && byte <= 0x3F) {
             /* Parameter byte, keep waiting for the final byte */
@@ -161,6 +181,9 @@ int8_t Cli::read(char byte) {
     else {
         if (BufIdx == 0 && byte == ascii.newline) {
             /* Ignore the new line of a \r\n combination */
+        } else if (byte == '\0') {
+            /* Ignore it, it would terminate the command. Telnet sends Enter
+             * as \r\0 for example */
         } else if (BufIdx == 0 && byte == ascii.argsep) {
             /* Ignore leading whitespace, the buffer never starts with it */
         } else if ( BufIdx < ( CLI_COMMANDSIZ - 1) ) {
@@ -384,7 +407,7 @@ bool Cli::parseArgs(uint8_t startIdx) {
             }
 
             if (Argc == CLI_ARGVSIZ) {
-                pStream->printf("Error, to many arguments (max: %d)\n", CLI_ARGVSIZ);
+                pStream->printf("Error, too many arguments (max: %d)\n", CLI_ARGVSIZ);
                 return false;
             }
 

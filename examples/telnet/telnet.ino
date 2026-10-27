@@ -129,10 +129,8 @@ void telnetInput(uint8_t byte)
             {
                 telnetState = tn_command;
             }
-            else if (byte != '\0')
+            else
             {
-                /* Enter is sent as "\r\0" or "\r\n", libcli ignores the
-                 * "\n" but not the "\0" */
                 cli.read(byte);
             }
             break;

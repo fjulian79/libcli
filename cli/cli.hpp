@@ -278,12 +278,14 @@ class Cli {
          * esc_false is used as long no escape has been detected.
          * esc_true is used if a escape character has ben detected.
          * esc_csi is used when a escape has been followed by a csi character.
+         * esc_ss3 is used when a escape has been followed by a ss3 character.
          */
         enum
         {
             esc_false = 0,
             esc_true = 1,
-            esc_csi = 2
+            esc_csi = 2,
+            esc_ss3 = 3
         }
         EscMode;
 

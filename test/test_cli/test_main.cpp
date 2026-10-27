@@ -199,7 +199,7 @@ void test_too_many_arguments(void)
 
     TEST_ASSERT_EQUAL(INT8_MIN, feed((cmd + "\r").c_str()));
     TEST_ASSERT_EQUAL(0, CapCalls);
-    assertOutput(cmd + "\nError, to many arguments (max: "
+    assertOutput(cmd + "\nError, too many arguments (max: "
         + std::to_string(CLI_ARGVSIZ) + ")\n" CLI_PROMPT);
 }
 
@@ -323,6 +323,41 @@ void test_csi_sequences_are_consumed(void)
     assertOutput("cap\nok" CLI_PROMPT);
 }
 
+void test_nul_is_ignored(void)
+{
+    feed("ca");
+    pCli->read('\0');
+    feed("p\r");
+    TEST_ASSERT_EQUAL(1, CapCalls);
+    assertOutput("cap\nok" CLI_PROMPT);
+
+    /* Telnet sends Enter as \r\0 */
+    pCli->read('\0');
+    feed("cap\r");
+    TEST_ASSERT_EQUAL(2, CapCalls);
+}
+
+void test_alt_key_is_ignored(void)
+{
+    feed("ca\033xp\r");
+    TEST_ASSERT_EQUAL(1, CapCalls);
+    assertOutput("cap\nok" CLI_PROMPT);
+}
+
+void test_esc_followed_by_control_character(void)
+{
+    /* Enter is processed as usual */
+    TEST_ASSERT_EQUAL(0, feed("cap\033\r"));
+    TEST_ASSERT_EQUAL(1, CapCalls);
+
+    /* A second ESC starts a new escape sequence */
+    feed("ca\033\033[3~p\r");
+    TEST_ASSERT_EQUAL(2, CapCalls);
+
+    feed("caq\033\bp\r");
+    TEST_ASSERT_EQUAL(3, CapCalls);
+}
+
 void test_echo_off(void)
 {
     pCli->setEcho(false);
@@ -401,6 +436,17 @@ void test_history_navigation(void)
     assertOutput(CLRLINE CLI_PROMPT);
     feed(DOWN);
     assertOutput("\a");
+}
+
+void test_history_navigation_in_application_cursor_mode(void)
+{
+    feed("cap 1\r");
+    Io.clear();
+
+    feed("\033OA");
+    assertOutput(CLRLINE CLI_PROMPT "cap 1");
+    feed("\033OB");
+    assertOutput(CLRLINE CLI_PROMPT);
 }
 
 void test_down_without_up_rings(void)
@@ -501,12 +547,16 @@ int main(void)
     RUN_TEST(test_ctrl_l_clears_the_screen);
     RUN_TEST(test_ctrl_k_clears_the_line);
     RUN_TEST(test_csi_sequences_are_consumed);
+    RUN_TEST(test_nul_is_ignored);
+    RUN_TEST(test_alt_key_is_ignored);
+    RUN_TEST(test_esc_followed_by_control_character);
     RUN_TEST(test_echo_off);
     RUN_TEST(test_terminal_control);
     RUN_TEST(test_reset_discards_the_input);
 #if CLI_HISTORYSIZ > 0
     RUN_TEST(test_up_restores_the_last_command);
     RUN_TEST(test_history_navigation);
+    RUN_TEST(test_history_navigation_in_application_cursor_mode);
     RUN_TEST(test_down_without_up_rings);
     RUN_TEST(test_restored_command_can_be_edited);
     RUN_TEST(test_whitespace_only_line_is_not_stored);

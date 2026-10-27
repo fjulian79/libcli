@@ -66,6 +66,12 @@ const struct {
     const char ret = '\r';
 
     /**
+     * @brief Definition of the ss3 control sequence character, used by
+     * terminals in application cursor mode for the cursor keys.
+     */
+    const char ss3 = 'O';
+
+    /**
      * @brief Character which is used to mark the begin and the end of a
      * string which shall be recognized as singe argument althow it contains
      * the character used to sperate arguments.
