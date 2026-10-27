@@ -3,18 +3,10 @@
 #
 # Copyright (C) 2026 Julian Friedrich
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# This file is licensed under the MIT License, see LICENSE.txt for
+# details.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# SPDX-License-Identifier: MIT
 #
 Import('env')
 import os
@@ -70,18 +62,10 @@ file.write("""/*
  *
  * Copyright (C) """ + time.strftime("%Y") + """ Julian Friedrich
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>. 
+ * This file is licensed under the MIT License, see LICENSE.txt for
+ * details.
+ *
+ * SPDX-License-Identifier: MIT
  *
  * This project is hosted on GitHub:
  *   https://github.com/fjulian79/libcli

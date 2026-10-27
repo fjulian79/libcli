@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The parameters of command functions are marked as possibly unused, commands not using all of them no longer cause warnings with `-Wextra`
 
 ### Changed
+- The license changed from GPL-3.0 to MIT, so libCli can be used in any project, including closed source firmware. Versions up to 4.7.0 remain licensed under GPL-3.0
 - Leading whitespace of the input is ignored, it is neither stored nor echoed. Before, a command preceded by whitespace was reported as unknown command
 
 ### Fixed

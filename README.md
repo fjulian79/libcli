@@ -304,7 +304,9 @@ Contributions are welcome! Please feel free to:
 
 ## License
 
-This library is licensed under **GPL-3.0**.
+This library is licensed under the **MIT License**, so it can be used in any
+project, including closed source firmware. Versions up to 4.7.0 have been
+licensed under GPL-3.0.
 
 See [LICENSE.txt](LICENSE.txt) for details.
 
