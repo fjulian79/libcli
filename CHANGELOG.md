@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Unit tests for the history, the command table, the parser, the line editing and the tab completion, run them on the host with `pio test`. The tests are excluded from the package.
+- New examples `arguments`, `blink`, `exec` and `telnet`
 - The parameters of command functions are marked as possibly unused, commands not using all of them no longer cause warnings with `-Wextra`
 
 ### Changed

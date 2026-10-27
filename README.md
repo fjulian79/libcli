@@ -222,15 +222,15 @@ build_flags = -Icfg  # Path to your cli_config.hpp
 
 For complete configuration documentation, see [CONFIGURATION.md](doc/CONFIGURATION.md).
 
-## Example
+## Examples
 
-A basic example demonstrating command definition and usage is included in the repository:
-
-```
-examples/basic/basic.ino
-```
-
-This example shows the fundamentals of defining commands, handling arguments, and integrating libCli into your sketch.
+| Example | Shows |
+|---|---|
+| [basic](examples/basic/basic.ino) | Defining commands and integrating libCli into a sketch |
+| [arguments](examples/arguments/arguments.ino) | Quoted strings, parsing numbers, validating arguments and returning errors |
+| [blink](examples/blink/blink.ino) | Controlling hardware while `loop()` keeps doing other work, without `delay()` |
+| [exec](examples/exec/exec.ino) | Executing commands from code, e.g. at startup or for commands received via MQTT |
+| [telnet](examples/telnet/telnet.ino) | Using the CLI via WiFi and telnet with a custom stream (ESP32, ESP8266, Pico W) |
 
 ## Advanced Usage
 
