@@ -27,5 +27,9 @@
     ], 
     "build": {
       "extraScript": "pre_version.py"
+    },
+    "export":
+    {
+      "exclude": ["test", "platformio.ini", ".gitignore"]
     }
   }

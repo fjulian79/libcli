@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Unit tests for the history, the command table, the parser, the line editing and the tab completion, run them on the host with `pio test`. The tests are excluded from the package.
+
+### Fixed
+- An empty string argument (`""`) was reported as unterminated string
+- An escaped quote at the start of a string argument (`"\"hi\""`) was not unescaped
+- Format warning in the command table overflow message of `Cli::begin()`
+
 ## [4.7.0] - 2026-07-08
 
 ### Added

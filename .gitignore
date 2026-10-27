@@ -1,2 +1,11 @@
 cli/version.h
 cmdTable.cpp
+
+# Created by PlatformIO when running the tests
+.pio
+
+# Created by PlatformIO and VS Code when opening the library, local only
+.vscode/
+
+# Created by the Finder of macOS
+.DS_Store

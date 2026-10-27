@@ -49,8 +49,8 @@ void Cli::begin(Stream *pIoStr, bool sortCmdTab) {
     size_t dropped = CliCommand::getDropCnt();
 
     if (dropped != 0) {
-        pIoStr->printf("WARNING: Cli Command table overflow, %d dropped!\n\n",
-            dropped);
+        pIoStr->printf("WARNING: Cli Command table overflow, %u dropped!\n\n",
+            (unsigned int) dropped);
     }
 
     if (sortCmdTab) {
@@ -295,7 +295,7 @@ int8_t Cli::checkCmdTable(void)
             break;
         }
     }
-    
+
     if (hasContent == false) {
         /* Processing a whitespace-only command does not make sense
          * Just ignore it and return to the prompt
@@ -417,6 +417,11 @@ bool Cli::parseArgs(uint8_t startIdx) {
 
             Argv[Argc] = &Buffer[i];
             Argc++;
+
+            /* The first character of the argument has not been processed
+             * yet, it may be the closing quote of an empty string or an
+             * escape sequence */
+            continue;
         }
 
         i++;

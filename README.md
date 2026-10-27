@@ -280,6 +280,20 @@ void setup() {
 
 For more examples and detailed API usage, see [API.md](doc/API.md).
 
+## Tests
+
+Unit tests can be run on the host, using AddressSanitizer and
+UndefinedBehaviorSanitizer:
+
+```
+pio test
+```
+
+This runs the tests with the default configuration and once with the history
+and once with the tab completion disabled, a single configuration can be
+selected with e.g. `pio test -e native`. `Stream` and `Serial` are provided by
+a minimal Arduino replacement in `test/support`.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to:
