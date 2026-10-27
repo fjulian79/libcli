@@ -128,11 +128,15 @@ The demo runs on multiple platforms (see `platformio.ini` in the demo repository
 #### PlatformIO
 Add to your `platformio.ini`:
 ```ini
-lib_deps = fjulian79/libCli@^4.4.0
+lib_deps = fjulian79/libCli
 ```
 
+To stay on a major version, append it as in `fjulian79/libCli@^4.7.0`, see the
+[releases](https://github.com/fjulian79/libcli/releases) for the latest one.
+
 #### Arduino IDE
-Clone the repository into your Arduino libraries folder:
+Install libCli via the Library Manager, or clone the repository into your
+Arduino libraries folder:
 ```sh
 cd ~/Arduino/libraries
 git clone https://github.com/fjulian79/libcli.git
