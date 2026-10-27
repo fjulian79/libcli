@@ -169,6 +169,8 @@ int8_t Cli::read(char byte) {
     else {
         if (BufIdx == 0 && byte == ascii.newline) {
             /* Ignore the new line of a \r\n combination */
+        } else if (BufIdx == 0 && byte == ascii.argsep) {
+            /* Ignore leading whitespace, the buffer never starts with it */
         } else if ( BufIdx < ( CLI_COMMANDSIZ - 1) ) {
             /* The index is incremented after storing the byte, there must be
              * space for the null terminator which is added by the user by
@@ -282,26 +284,11 @@ int8_t Cli::checkCmdTable(void)
 {
     uint8_t i = 0;
     int8_t ret = 0;
-    bool hasContent = false;
 
+    /* As leading whitespace is ignored by read(), a whitespace-only line ends
+     * up as empty buffer and is neither processed nor stored in the history */
     if (BufIdx == 0) {
         goto out;
-    }
-
-    /* Skip whitespace-only commands from history */
-    for (uint8_t k = 0; k < BufIdx; k++) {
-        if (Buffer[k] != ascii.argsep && Buffer[k] != '\t') {
-            hasContent = true;
-            break;
-        }
-    }
-
-    if (hasContent == false) {
-        /* Processing a whitespace-only command does not make sense
-         * Just ignore it and return to the prompt
-         */
-        ret = 0;
-        goto out_2;
     }
 
 #if CLI_HISTORYSIZ > 0

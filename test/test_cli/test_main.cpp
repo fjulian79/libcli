@@ -248,7 +248,21 @@ void test_whitespace_only_line(void)
 {
     TEST_ASSERT_EQUAL(0, feed("   \r"));
     TEST_ASSERT_EQUAL(0, CapCalls);
-    assertOutput("   \n" CLI_PROMPT);
+    assertOutput("\n" CLI_PROMPT);
+}
+
+void test_leading_whitespace_is_ignored(void)
+{
+    TEST_ASSERT_EQUAL(0, feed("  cap  a\r"));
+    TEST_ASSERT_EQUAL(1, CapCalls);
+    assertArgs({"a"});
+    assertOutput("cap  a\nok" CLI_PROMPT);
+}
+
+void test_leading_whitespace_after_backspace_is_ignored(void)
+{
+    feed("x\b cap\r");
+    TEST_ASSERT_EQUAL(1, CapCalls);
 }
 
 void test_crlf(void)
@@ -486,6 +500,8 @@ int main(void)
     RUN_TEST(test_failing_command);
     RUN_TEST(test_empty_line);
     RUN_TEST(test_whitespace_only_line);
+    RUN_TEST(test_leading_whitespace_is_ignored);
+    RUN_TEST(test_leading_whitespace_after_backspace_is_ignored);
     RUN_TEST(test_crlf);
     RUN_TEST(test_backspace);
     RUN_TEST(test_backspace_on_empty_line_rings);

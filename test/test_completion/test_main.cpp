@@ -113,6 +113,15 @@ void test_single_match_is_completed(void)
     TEST_ASSERT_EQUAL_STRING("help", LastCmd.c_str());
 }
 
+void test_leading_whitespace_is_ignored(void)
+{
+    feed("  he");
+    Io.clear();
+
+    feed("\t");
+    assertOutput("lp ");
+}
+
 void test_single_match_among_similar_ones(void)
 {
     feed("led_of");
@@ -195,6 +204,7 @@ int main(void)
     RUN_TEST(test_tab_on_empty_line_rings);
     RUN_TEST(test_no_match_rings);
     RUN_TEST(test_single_match_is_completed);
+    RUN_TEST(test_leading_whitespace_is_ignored);
     RUN_TEST(test_single_match_among_similar_ones);
     RUN_TEST(test_common_prefix_is_completed_and_matches_listed);
     RUN_TEST(test_matches_listed_without_common_prefix);

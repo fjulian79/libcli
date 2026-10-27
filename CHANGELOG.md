@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Unit tests for the history, the command table, the parser, the line editing and the tab completion, run them on the host with `pio test`. The tests are excluded from the package.
 
+### Changed
+- Leading whitespace of the input is ignored, it is neither stored nor echoed. Before, a command preceded by whitespace was reported as unknown command
+
 ### Fixed
 - An empty string argument (`""`) was reported as unterminated string
 - An escaped quote at the start of a string argument (`"\"hi\""`) was not unescaped
