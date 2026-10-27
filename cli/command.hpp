@@ -31,11 +31,18 @@
 #include "cli/config.hpp"
 
 /**
+ * @brief Used to mark the parameters of a command function as possibly unused,
+ * as not every command needs all of them.
+ */
+#define CLI_UNUSED                  __attribute__((unused))
+
+/**
  * @brief Generates a libcli command definition based on the given name.
  */
 #define CLI_COMMAND_DEF(_name)                                      \
                                                                     \
-    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
+    int8_t cmd_ ## _name (Stream& ioStream CLI_UNUSED,              \
+        const char *argv[] CLI_UNUSED, uint8_t argc CLI_UNUSED)
 
 /**
  * @brief Used to define and register a libcli command.
