@@ -1,6 +1,15 @@
 # libCli
 
-**A feature-rich yet lightweight and resource-conscious CLI implementation specifically designed for bare-metal embedded systems based on Arduino.**
+**A feature-rich yet lightweight and resource-conscious CLI implementation specifically designed for bare-metal and RTOS based embedded systems using the Arduino framework.**
+
+libCli gives a microcontroller a command line which feels like a real terminal: command history, tab completion and line editing, on Serial as well as via telnet. It takes care of what is usually left to every project, from the line endings of the different terminal programs to the telnet protocol, so the commands only deal with what they are meant to do.
+
+### Highlights of 5.0
+
+- **libCli is the line discipline.** Like the tty layer of the Linux kernel, libCli now sits between the terminal and the commands. Whatever the terminal sends for Enter, CR, CR LF or CR NUL, libCli and every command see a single CR. A command asking for a password or waiting for a key just reads its `ioStream`, the second byte of Enter can no longer get in the way. And the PlatformIO monitor works with its default settings.
+- **Telnet in one line.** `cli.setStream(&client, CliStream::telnet)` and libCli speaks the protocol: it switches the client to character mode, so the cursor keys, the command history and the tab completion work exactly as on Serial, filters and answers the telnet commands and sends proper line endings. Before, this took around 100 lines of protocol handling in every project, see the [telnet example](examples/telnet/telnet.ino).
+
+See the [Changelog](CHANGELOG.md) for the details and the breaking changes.
 
 ## Features
 
@@ -10,8 +19,8 @@
   - Cross-platform compatible: works on all Arduino platforms
   - See [Command Registration](doc/command-registration.md) for how it works
 - **Stream-Based I/O** - Works with any Arduino Stream (Serial, Telnet, WebSocket, etc.)
-- **Line Endings Handled** - CR, CR LF and CR NUL all work as Enter, also for commands reading input themselves, see [Line Endings](doc/line-endings.md)
-- **Built-in Telnet Support** - Character mode, cursor keys, history and tab completion via telnet, just pass the client
+- **Line Discipline** - CR, CR LF and CR NUL all work as Enter, whenever the second byte arrives, also for commands reading input themselves. Works with the default settings of the common terminal programs, see [Line Endings](doc/line-endings.md)
+- **Built-in Telnet Support** - Just pass the client: character mode, cursor keys, history and tab completion as on Serial, the protocol is handled by libCli
 - **Low Memory Footprint** - Configurable buffer sizes, ~400 bytes RAM with defaults
 - **Simple Integration** - Just `cli.begin()` and `cli.loop()` in your sketch
 
@@ -74,6 +83,7 @@ All buffers (command buffer, history buffer, command table) are sized at compile
 // - Command buffer: CLI_COMMANDSIZ bytes
 // - History buffer: CLI_HISTORYSIZ bytes
 // - Argument array: CLI_ARGVSIZ * sizeof(char*)
+// - CliStream:      a few bytes of state per Cli instance, no buffer
 // Total: ~400 bytes with defaults
 ```
 
@@ -103,6 +113,18 @@ For a detailed explanation of why this design was chosen and how it works, see [
 
 Works with any Arduino `Stream` implementation - Serial, Telnet, WebSockets, or custom streams. Write once, use with any transport layer.
 
+### The Terminal Is libCli's Job
+
+A command should not have to know which terminal program is used or how the
+connection works. libCli wraps the stream by a `CliStream`, which does what the
+tty layer of the kernel does on Linux: it reads every line ending as a single
+CR, and on telnet it speaks the protocol, like `telnetd` does. Commands get this
+stream as `ioStream`, so what is true for libCli is true for every command.
+
+libCli does not deal with the transport itself. Connecting to a network,
+accepting clients and authentication stay with the application. This is where
+the line to *libCli shall not become bash* is drawn on this side.
+
 ## Demo Project
 
 For a complete, real-world example of libCli in action, check out **[clidemo](https://github.com/fjulian79/clidemo)**.
@@ -110,7 +132,7 @@ For a complete, real-world example of libCli in action, check out **[clidemo](ht
 This full-featured demo project showcases:
 - **Multiple command implementations** - Various command types and patterns
 - **Telnet integration** - Remote CLI access over network
-- **Custom transport streams** - Beyond simple Serial usage
+- **Switching streams** - Moving the CLI between Serial and telnet at runtime
 - **Production patterns** - Best practices for real-world applications
 - **Unit tests** - Testing strategies for CLI commands
 
@@ -134,7 +156,7 @@ Add to your `platformio.ini`:
 lib_deps = fjulian79/libCli
 ```
 
-To stay on a major version, append it as in `fjulian79/libCli@^4.7.0`, see the
+To stay on a major version, append it as in `fjulian79/libCli@^5.0.0`, see the
 [releases](https://github.com/fjulian79/libcli/releases) for the latest one.
 
 #### Arduino IDE
@@ -256,7 +278,7 @@ cli.setStream(&Serial);
 
 ### Disabling Echo
 
-Suppresses the per-character echo of user input, useful when a hostapplication drives the CLI programmatically and handles its own echo. Note this only affects the echo of typed characters - prompts, the bell signal, error messages and the tab-completion match list are always written regardless of this setting. It is therefore **not** suitable for masking password input, since e.g. history navigation or Ctrl+L still reprint the current buffer unconditionally.
+Suppresses the per-character echo of user input, useful when a host application drives the CLI programmatically and handles its own echo. Note this only affects the echo of typed characters - prompts, the bell signal, error messages and the tab-completion match list are always written regardless of this setting. It is therefore **not** suitable for masking password input, since e.g. history navigation or Ctrl+L still reprint the current buffer unconditionally.
 
 ```cpp
 cli.setEcho(false);  // No character echo
