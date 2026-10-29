@@ -29,9 +29,13 @@ const struct {
 
     /**
      * @brief Used for echo a delete line to the terminal.
-     * Carriage Return + CSI Ps K, PS = 2
+     * CUB (cursor backward) Pn = 999 + EL (erase in line) Ps = 2
+     *
+     * No carriage return on purpose, some terminals map a received CR to LF,
+     * e.g. the PlatformIO monitor with monitor_eol = CR. The cursor is moved
+     * to the first column by CUB instead, the terminal stops at the margin.
      */
-    const char clrline[6] = "\r\033[2K";
+    const char clrline[11] = "\033[999D\033[2K";
 
     /**
      * @brief Used to clear the screen and rest the cursor to 1:1

@@ -119,6 +119,7 @@ The demo runs on multiple platforms (see `platformio.ini` in the demo repository
 - **[API Reference](doc/API.md)** - Complete API documentation for all classes and methods
 - **[Configuration Guide](doc/CONFIGURATION.md)** - Detailed configuration options and memory considerations
 - **[Command Registration](doc/COMMAND_REGISTRATION.md)** - How automatic command registration works and why
+- **[Line Endings](doc/LINE_ENDINGS.md)** - CR, LF, terminals, Linux and Telnet, and which settings work
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ## Quick Start

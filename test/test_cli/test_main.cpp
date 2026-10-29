@@ -24,7 +24,7 @@
 #define UP              "\033[A"
 #define DOWN            "\033[B"
 #define DEL             "\b\033[0K"
-#define CLRLINE         "\r\033[2K"
+#define CLRLINE         "\033[999D\033[2K"
 #define CLRSCR          "\033[2J\033[1;1H"
 
 static TestStream Io;
