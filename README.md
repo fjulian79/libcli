@@ -136,8 +136,7 @@ To stay on a major version, append it as in `fjulian79/libCli@^4.7.0`, see the
 [releases](https://github.com/fjulian79/libcli/releases) for the latest one.
 
 #### Arduino IDE
-Install libCli via the Library Manager, or clone the repository into your
-Arduino libraries folder:
+Clone the repository into your Arduino libraries folder:
 ```sh
 cd ~/Arduino/libraries
 git clone https://github.com/fjulian79/libcli.git

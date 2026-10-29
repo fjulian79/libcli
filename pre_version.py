@@ -37,16 +37,6 @@ if not version.count(".") == 2:
     print("version: " + version)
     exit(1)
 
-# library.properties is used by the Arduino IDE and must state the same version
-if os.path.exists("library.properties"):
-    with open("library.properties", "r") as f:
-        for line in f:
-            if line.startswith("version="):
-                if line.split("=", 1)[1].strip() != version:
-                    print("WARNING: The version in library.properties differs " \
-                    "from library.json (" + version + ")")
-                break
-
 version = "v" + version
 version_source = "library.json"
 
