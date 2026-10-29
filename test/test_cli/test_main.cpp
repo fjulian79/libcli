@@ -57,6 +57,35 @@ CLI_COMMAND(fail)
     return 5;
 }
 
+static int PeekedByCmd;
+
+static Stream *ParentOfCmd;
+
+static CliStream *StreamOfCmd;
+
+/**
+ * Captures what a command reading the input itself sees.
+ */
+CLI_COMMAND(peek)
+{
+    (void) argv;
+    (void) argc;
+    PeekedByCmd = ioStream.peek();
+    ParentOfCmd = ioStream.parent();
+    StreamOfCmd = &ioStream;
+    return 0;
+}
+
+/**
+ * Runs the peek command by exec() with its own ioStream.
+ */
+CLI_COMMAND(nested)
+{
+    (void) argv;
+    (void) argc;
+    return CliCommand::exec(ioStream, "peek", nullptr, 0);
+}
+
 static int8_t feed(const char *str)
 {
     int8_t ret = 0;
@@ -337,6 +366,83 @@ void test_nul_is_ignored(void)
     TEST_ASSERT_EQUAL(2, CapCalls);
 }
 
+void test_command_does_not_see_the_second_byte_of_enter(void)
+{
+    Io.Input = "peek\r\n";
+    while (Io.available())
+        pCli->loop();
+    TEST_ASSERT_EQUAL(-1, PeekedByCmd);
+    TEST_ASSERT_EQUAL(0, Io.available());
+
+    Io.Input = std::string("peek\r\0", 6);
+    while (Io.available())
+        pCli->loop();
+    TEST_ASSERT_EQUAL(-1, PeekedByCmd);
+
+    Io.Input = "peek\rx";
+    while (Io.Input.size() > 1)
+        pCli->loop();
+    TEST_ASSERT_EQUAL('x', PeekedByCmd);
+}
+
+void test_command_gets_the_parent(void)
+{
+    feed("peek\r");
+    TEST_ASSERT_EQUAL_PTR(&Io, ParentOfCmd);
+}
+
+void test_exec_wraps_the_stream(void)
+{
+    TestStream other;
+
+    TEST_ASSERT_EQUAL(0, CliCommand::exec(other, "peek", nullptr, 0));
+    TEST_ASSERT_EQUAL_PTR(&other, ParentOfCmd);
+}
+
+void test_exec_from_a_command_keeps_the_stream(void)
+{
+    CliStream *pOuter;
+
+    feed("peek\r");
+    pOuter = StreamOfCmd;
+
+    feed("nested\r");
+    TEST_ASSERT_EQUAL_PTR(pOuter, StreamOfCmd);
+    TEST_ASSERT_EQUAL_PTR(&Io, ParentOfCmd);
+}
+
+void test_telnet_mode(void)
+{
+    pCli->setEcho(false);
+    Io.clear();
+    pCli->setStream(&Io, CliStream::telnet);
+
+    /* Negotiation, then the prompt */
+    assertOutput("\xff\xfb\x01\xff\xfb\x03" CLI_PROMPT);
+
+    /* Echo is on again, the new line is sent as CR LF */
+    Io.Input = std::string("cap a\r\0", 8);
+    while (Io.available())
+        pCli->loop();
+    TEST_ASSERT_EQUAL(1, CapCalls);
+    assertArgs({"a"});
+    assertOutput("cap a\r\nok" CLI_PROMPT);
+}
+
+void test_detached_stream(void)
+{
+    pCli->setStream(nullptr);
+    TEST_ASSERT_NULL(pCli->getStream());
+    TEST_ASSERT_EQUAL(0, pCli->loop());
+}
+
+void test_get_stream(void)
+{
+    feed("peek\r");
+    TEST_ASSERT_EQUAL_PTR(StreamOfCmd, pCli->getStream());
+    TEST_ASSERT_EQUAL_PTR(&Io, pCli->getStream()->parent());
+}
+
 void test_alt_key_is_ignored(void)
 {
     feed("ca\033xp\r");
@@ -548,6 +654,13 @@ int main(void)
     RUN_TEST(test_ctrl_k_clears_the_line);
     RUN_TEST(test_csi_sequences_are_consumed);
     RUN_TEST(test_nul_is_ignored);
+    RUN_TEST(test_command_does_not_see_the_second_byte_of_enter);
+    RUN_TEST(test_command_gets_the_parent);
+    RUN_TEST(test_exec_wraps_the_stream);
+    RUN_TEST(test_exec_from_a_command_keeps_the_stream);
+    RUN_TEST(test_telnet_mode);
+    RUN_TEST(test_detached_stream);
+    RUN_TEST(test_get_stream);
     RUN_TEST(test_alt_key_is_ignored);
     RUN_TEST(test_esc_followed_by_control_character);
     RUN_TEST(test_echo_off);

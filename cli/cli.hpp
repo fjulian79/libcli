@@ -64,14 +64,44 @@ class Cli {
                 bool sortCmdTab = CLI_CMDTAB_SORTING_DEFAULT);
 
         /**
+         * @brief Like begin() above, with the protocol spoken on the stream.
+         *
+         * @param pIoStr The stream to use for read and write.
+         * @param mode CliStream::telnet for a telnet client, e.g. a WiFiClient
+         * accepted by a server, see CliStream.
+         * @param sortCmdTab Optional, see begin() above.
+         */
+        void begin(Stream *pIoStr, CliStream::mode_t mode,
+                bool sortCmdTab = CLI_CMDTAB_SORTING_DEFAULT);
+
+        /**
          * @brief Used to configure the io stream to use.
          *
          * The io stream used per default is the Serial object.
-         * This call can be used if a other stream object shall be used.
+         * This call can be used if a other stream object shall be used, e.g.
+         * when a telnet client connects. The state of the input is reset and
+         * a new prompt is printed.
          *
-         * @param pIoStr Pointer to a Stream based object.
+         * The stream is wrapped by a CliStream, which is passed as ioStream to
+         * the commands. In telnet mode the echo is enabled, as the client is
+         * told that the server echoes.
+         *
+         * @param pIoStr Pointer to a Stream based object, nullptr to detach.
+         * @param mode The protocol spoken on the stream.
          */
-        void setStream(Stream *pIoStr);
+        void setStream(Stream *pIoStr,
+                CliStream::mode_t mode = CliStream::terminal);
+
+        /**
+         * @brief The stream the commands get as ioStream.
+         *
+         * Use it to print outside of a command, e.g. a welcome message, with
+         * the same translation as the commands, e.g. for telnet.
+         *
+         * @return The CliStream wrapping the stream given to begin() or
+         * setStream(), nullptr if none is set.
+         */
+        CliStream *getStream(void);
 
         /**
          * @brief The function to call in loop()
@@ -270,7 +300,13 @@ class Cli {
         /**
          * @brief The stream object to use for io operations.
          */
-        Stream *pStream;
+        CliStream *pStream;
+
+        /**
+         * @brief The stream wrapping the one given by the user, pStream points
+         * to it while a stream is set.
+         */
+        CliStream IoStream;
 
         /**
          * @brief Used to represent the states of escaping.

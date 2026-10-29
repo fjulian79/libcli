@@ -6,7 +6,7 @@
  * with the CliCommand class. The macro takes the name of the command as an
  * argument. The function is created with the following signature:
  *
- *      int8_t cmd_<name>(Stream &ioStream, const char *argv[], uint8_t argc)
+ *      int8_t cmd_<name>(CliStream &ioStream, const char *argv[], uint8_t argc)
  *
  * Using CLI_COMMAND(name), the command is automatically added to the command
  * table—no need to manually register it!
@@ -80,7 +80,7 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
     Serial.println();
-    cmd_ver(Serial, 0, 0);
+    CliCommand::exec(Serial, "ver", nullptr, 0);
 
     cli.begin();
 }

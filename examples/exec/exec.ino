@@ -69,8 +69,10 @@ void setup()
     /* Executes a command by its name, e.g. at startup */
     CliCommand::exec(Serial, "hello", args, 1);
 
-    /* Calls a command directly, as it is known at compile time */
-    cmd_hello(Serial, nullptr, 0);
+    /* Calls a command directly, as it is known at compile time. A command
+     * takes a CliStream, which wraps the stream to use. */
+    CliStream stream(&Serial);
+    cmd_hello(stream, nullptr, 0);
 
     cli.begin();
 }

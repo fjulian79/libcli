@@ -8,8 +8,31 @@ libCli handles all of this and which settings work.
 The topic looks trivial and is not. Most problems are caused by a program in
 the middle "helpfully" translating bytes, in a way that nobody asked for.
 
+## In Short: Recommended Settings
+
+Since libCli 5.0.0 the terminal may send Enter as CR, CR LF or CR NUL, the
+`CliStream` of libCli reads each of them as a single CR. Only an LF alone does
+not execute a command. So the input side is solved, what is left is not to
+break the display:
+
+| Connection | Setting |
+|------------|---------|
+| PlatformIO monitor | Do **not** set `monitor_eol`. The default `CRLF` leaves the received data alone, and the CR LF it sends for Enter is handled by libCli. `CR` turns every CR sent by the firmware into a new line, `LF` makes Enter send LF only |
+| picocom | `picocom -b <baud> --imap lfcrlf <device>`. The firmware ends its lines with LF only, `--imap lfcrlf` adds the CR for the display |
+| Telnet | `cli.setStream(&client, CliStream::telnet)`, see the [telnet example](../examples/telnet/telnet.ino) |
+| Application output | LF for a new line. A CR returns to the start of the current line with the settings above, `ESC [ 999 D` does so with every terminal, even with `monitor_eol = CR` |
+
+With a libCli version before 5.0.0 the terminal has to send CR only: picocom
+as above, the PlatformIO monitor with `monitor_eol = CR` and
+`monitor_raw = yes`.
+
+That's all there is to it. If you want to know why it has to be this way, or
+put differently, why a terminal program thinks it knows better than you what
+your bytes should look like, read on. Bring coffee.
+
 ## Table of Contents
 
+- [In Short: Recommended Settings](#in-short-recommended-settings)
 - [The Bytes](#the-bytes)
 - [What the Enter Key Sends](#what-the-enter-key-sends)
 - [What Linux Does: the TTY Line Discipline](#what-linux-does-the-tty-line-discipline)
@@ -20,7 +43,6 @@ the middle "helpfully" translating bytes, in a way that nobody asked for.
 - [Telnet](#telnet)
 - [How libCli Handles It](#how-libcli-handles-it)
 - [Pitfalls](#pitfalls)
-- [Recommended Settings](#recommended-settings)
 - [Lessons Learned](#lessons-learned)
 
 ## The Bytes
@@ -176,8 +198,9 @@ which then turns each LF into CR LF:
 | `CR`             | CR                   | **LF**       | LF           | **LF LF**       |
 | `LF`             | LF                   | CR           | LF           | CR LF           |
 
-- `CRLF` displays everything correctly, but sends two bytes for every Enter,
-  see [Pitfalls](#pitfalls).
+- `CRLF` displays everything correctly. It sends two bytes for every Enter,
+  which libCli handles since 5.0.0, see
+  [How libCli Handles It](#how-libcli-handles-it).
 - `CR` sends exactly what would be expected, but changes the received data.
   Everything which relies on a CR to return to the start of the current line
   breaks, e.g. a line which is cleared and redrawn, or a status line which is
@@ -233,22 +256,46 @@ Telnet has more to offer:
 
 On Linux `telnetd` sits between the network and the tty. It handles IAC,
 negotiates the options and turns the NVT line ending into a single CR before
-passing it on to the line discipline. This is exactly the job a Telnet server
-on a microcontroller has to do itself, in front of libCli.
+passing it on to the line discipline. On a microcontroller this job has to be
+done in front of the command interpreter as well, libCli does it in its
+telnet mode, see below.
 
 ## How libCli Handles It
+
+libCli wraps the stream it runs on by a `CliStream`, its line discipline. The
+`CliStream` is what every command gets as `ioStream`, so libCli and the
+commands read through the same filter. See the
+[API reference](api.md#clistream-class).
 
 **Input:**
 
 - **CR** is Enter, it executes the command.
-- **LF** at the start of a line is dropped, which covers the second byte of
-  CR LF. An LF within a line is stored as an ordinary character.
-- **NUL** is dropped everywhere, which covers the second byte of CR NUL.
+- **CR LF** and **CR NUL** are read as a single CR. The second byte is dropped
+  by the `CliStream` whenever it arrives, also if it arrives later than the CR,
+  e.g. one byte time later on a UART, and also if a command reads the input.
+- **NUL** is dropped everywhere.
+- **LF** not following a CR is passed on. libCli drops it at the start of a
+  line and stores it as an ordinary character within a line.
+
+**Telnet:** `cli.setStream(&client, CliStream::telnet)` makes the `CliStream`
+handle the telnet protocol, like `telnetd` does on Linux:
+
+- It sends `IAC WILL ECHO` and `IAC WILL SUPPRESS-GO-AHEAD`, the client
+  switches to character mode, and enables the echo of libCli.
+- It removes the telnet commands from the input, including subnegotiations,
+  and reads `IAC IAC` as a data byte 0xFF.
+- It refuses all options the client asks for besides ECHO and SUPPRESS GO
+  AHEAD, and does not answer acknowledgements, to avoid an endless loop of
+  negotiation.
+- It sends a new line as CR LF, a CR not followed by LF as CR NUL and a data
+  byte 0xFF as IAC IAC. The output is collected and written in blocks, as each
+  write to a socket may send a TCP packet.
 
 **Output:**
 
 - A new line is written as LF only. A terminal program adds the CR, either by
-  an option like picocom `--imap lfcrlf` or by `ONLCR` of the local tty.
+  an option like picocom `--imap lfcrlf` or by `ONLCR` of the local tty. In
+  telnet mode the `CliStream` adds it.
 - `clearLine()` erases the line by `ESC [ 999 D` (cursor 999 columns back,
   it stops at the margin) followed by `ESC [ 2 K` (erase the line). It does
   not use CR, so the line is cleared correctly even if the terminal program
@@ -264,18 +311,18 @@ on a microcontroller has to do itself, in front of libCli.
   `CR ESC [ 2 K` then, with `monitor_eol = CR` the CR arrived as LF and each
   step was printed on a new line.
 - `clearLine()` no longer writes a CR since 4.8.1.
+- 5.0.0 introduced the `CliStream`. Before, a command reading input itself
+  received the second byte of Enter, and telnet had to be handled by the
+  application.
 
 ## Pitfalls
 
-**A command reading input sees the second byte.** A command runs within the
-call which processed the CR. If the terminal sends CR LF or CR NUL, the second
-byte is still in the stream at this time. A command which reads from the stream
-itself, e.g. to ask for a password or to wait for any key, receives it first.
-libCli never sees this byte, so its rules above do not help here.
-
-Avoid it by making sure only CR arrives: configure the terminal program to
-send CR only, and convert the Telnet line ending in the Telnet layer, see
-below. If that is not possible, the command has to skip LF and NUL itself.
+**Reading input past the CliStream.** A command runs within the call which
+processed the CR. If the terminal sends CR LF or CR NUL, the second byte is
+still in the stream at this time. Reading from `ioStream` is safe, the
+`CliStream` drops it. A command reading from the parent stream or directly
+from e.g. `Serial` receives it, and so does an application feeding bytes to
+`Cli::read()` itself.
 
 **Overwriting a line by CR in the application.** A status line printed
 continuously and overwritten by a leading CR breaks with `monitor_eol = CR`
@@ -285,44 +332,16 @@ just like the history did, each update ends up on a new line. Use
 **`monitor_eol = LF`.** libCli executes a command on CR only. With LF as line
 end nothing is executed, the LF is stored as input.
 
-## Recommended Settings
-
-| Connection | Setting |
-|------------|---------|
-| picocom | `picocom -b <baud> --imap lfcrlf <device>`, no `--omap` |
-| PlatformIO monitor | `monitor_eol = CR` with a libCli version whose `clearLine()` writes no CR. With older versions add `monitor_raw = yes` |
-| Telnet | The Telnet server removes the IAC sequences and turns CR LF and CR NUL into CR before the data reaches libCli. Negotiate character mode for cursor keys, history and tab completion, and enable the echo of libCli |
-| Application output | LF for a new line, `ESC [ 999 D` to return to the start of the current line, never a bare CR |
-
-With these settings libCli and every command only ever see a single CR for
-Enter, on every connection.
-
-A minimal filter for the Telnet line ending, as part of a `Stream` wrapping the
-client socket:
-
-```cpp
-/* Called for every data byte after the IAC sequences have been removed.
- * Returns false if the byte is to be dropped. */
-bool TelnetStream::filterEol(int c) {
-    bool drop = LastWasCr && (c == '\n' || c == '\0');
-
-    LastWasCr = (c == '\r');
-    return !drop;
-}
-```
-
-Since every read goes through the wrapper, it does not matter whether libCli
-or a command reads the byte, and it does not matter when the second byte
-arrives.
-
 ## Lessons Learned
 
 - Enter sends CR. Every other line ending on the input side is a translation
   done by some program in the middle.
 - On Linux the kernel normalizes line endings for every program, on a
   microcontroller nobody does unless the firmware does it.
-- Telnet requires two bytes for Enter. Handle that in the Telnet layer, like
-  `telnetd` does, not in the command interpreter.
+- Telnet requires two bytes for Enter. Handle that in a layer in front of the
+  command interpreter, like `telnetd` does, not in the interpreter itself.
+- Filter in a stream wrapping the connection. Every read goes through it, so
+  it does not matter who reads the byte or when it arrives.
 - miniterm applies its end of line mode to the sent data, the mode `CR` to
   the received data as well. `monitor_eol = CR` fixes the sending side and
   breaks every CR sent by the firmware.

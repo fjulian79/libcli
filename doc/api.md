@@ -7,6 +7,7 @@ This file is intended to provide infos on the public API of libCli which is inte
 - [Command Definition](#command-definition)
 - [Cli Class](#cli-class)
 - [CliCommand Class](#clicommand-class)
+- [CliStream Class](#clistream-class)
 - [Command Function Signature](#command-function-signature)
 - [Return Codes](#return-codes)
 
@@ -69,7 +70,8 @@ However, the CliCommand::exec() method can be used to execute commands by name a
 // Forward declaration
 CLI_COMMAND_DEF(mycommand);
 
-// Example for manual command execution with forward declaration
+// Example for manual command execution with forward declaration, ioStream is
+// the CliStream of the calling command
 cmd_mycommand(ioStream, nullptr, 0);
 
 // Example for manual command execution without the need of forward declarations. 
@@ -94,12 +96,14 @@ Creates a new Cli instance.
 
 ```cpp
 void begin(Stream *pIoStr = &Serial, bool sortCmdTab = CLI_CMDTAB_SORTING_DEFAULT);
+void begin(Stream *pIoStr, CliStream::mode_t mode, bool sortCmdTab = CLI_CMDTAB_SORTING_DEFAULT);
 ```
 
 Initializes the CLI with the specified I/O stream.
 
 **Parameters:**
 - `pIoStr` - Pointer to the Stream object to use (default: &Serial)
+- `mode` - The protocol spoken on the stream, `CliStream::terminal` (default) or `CliStream::telnet`, see [setStream()](#setstream) and [CliStream Class](#clistream-class)
 - `sortCmdTab` - Whether to sort the command table (default: CLI_CMDTAB_SORTING_DEFAULT)
 
 Please note that the sortCmdTab parameter is optional and its default value depends on if command completion is enabled or not. CLI_CMDTAB_SORTING_DEFAULT is set to true if CLI_TAB_COMPLETION is enabled and to false if CLI_TAB_COMPLETION is disabled. This is because the command completion code relies on the command table being sorted to display commands in alphabetical order. It does not sort matches every time to save processing time. So if you enable command completion and don't provide a value for sortCmdTab, the command table will be sorted automatically. If you provide a value for sortCmdTab, it will be used regardless of the state of CLI_TAB_COMPLETION.
@@ -161,20 +165,50 @@ if (customStream.available()) {
 ### setStream()
 
 ```cpp
-void setStream(Stream *pIoStr);
+void setStream(Stream *pIoStr, CliStream::mode_t mode = CliStream::terminal);
 ```
 
 Change the I/O stream during runtime.
 
 **Important:** Changing the stream implicitly resets the CLI state (input buffer, history navigation, tab completion state) to avoid inconsistencies.
 
+libCli wraps the given stream by a [CliStream](#clistream-class), which is
+passed as `ioStream` to the commands. In `CliStream::telnet` mode the client
+is switched to character mode and told that the server echoes, so the echo of
+libCli is enabled, see [setEcho()](#setecho).
+
 **Parameters:**
-- `pIoStr` - Pointer to the new Stream object
+- `pIoStr` - Pointer to the new Stream object, `nullptr` to detach the CLI
+- `mode` - The protocol spoken on the stream, `CliStream::terminal` (default)
+  or `CliStream::telnet` for a telnet client, e.g. a `WiFiClient` accepted by
+  a `WiFiServer`
 
 **Example:**
 ```cpp
-// Switch from Serial to telnet stream
-cli.setStream(&telnetStream);
+// A telnet client connected, the CLI moves to it
+cli.setStream(&client, CliStream::telnet);
+
+// It disconnected, back to Serial
+cli.setStream(&Serial);
+```
+
+### getStream()
+
+```cpp
+CliStream *getStream(void);
+```
+
+**Returns:** The [CliStream](#clistream-class) the commands get as `ioStream`,
+`nullptr` if no stream is set.
+
+Use it to print outside of a command with the same translation as the
+commands, e.g. a welcome message for a telnet client:
+
+```cpp
+cli.setStream(&client, CliStream::telnet);
+cli.clearLine();
+cli.getStream()->printf("Welcome\n");
+cli.refreshPrompt();
 ```
 
 ### setEcho()
@@ -417,9 +451,15 @@ if (cmd != nullptr) {
 ```cpp
 static int8_t exec(Stream& ioStream, const char* name, 
                    const char* argv[], uint8_t argc);
+static int8_t exec(CliStream& ioStream, const char* name, 
+                   const char* argv[], uint8_t argc);
 ```
 
 Execute a command programmatically by name.
+
+Called with any stream, e.g. `Serial`, the command gets a `CliStream` in
+terminal mode wrapping it. Called with the `ioStream` of a command, the
+executed command gets the same `ioStream`.
 
 **Parameters:**
 - `ioStream` - Stream object for I/O
@@ -436,24 +476,109 @@ const char* args[] = {"verbose"};
 int8_t result = CliCommand::exec(Serial, "status", args, 1);
 ```
 
+## CliStream Class
+
+The stream libCli and its commands use for I/O. It wraps the stream given to
+`Cli::begin()` or `Cli::setStream()`, its parent, and does on the input side
+what the line discipline of the kernel does on Linux, see
+[line-endings.md](line-endings.md):
+
+- CR LF and CR NUL are read as a single CR, no matter when the second byte
+  arrives. A NUL byte is dropped everywhere.
+- In `CliStream::telnet` mode it handles the telnet protocol: it negotiates
+  character mode with the client, removes and answers the telnet commands sent
+  by the client, sends a new line as CR LF, a CR not followed by LF as CR NUL
+  and a data byte 0xFF as IAC IAC.
+
+The output is passed on unchanged in `CliStream::terminal` mode.
+
+No data is buffered, the filter works on the parent by `peek()` and `read()`.
+Therefore `available()` returns 1 while data is available, not the number of
+bytes.
+
+A command which needs the unfiltered data, e.g. to transfer binary data, uses
+the parent stream.
+
+### Modes
+
+```cpp
+typedef enum {
+    terminal = 0,
+    telnet
+} mode_t;
+```
+
+- `terminal` - A terminal, e.g. on a serial port
+- `telnet` - A telnet client, e.g. a `WiFiClient` accepted by a server
+
+### Constructor
+
+```cpp
+CliStream();
+CliStream(Stream *pParent, mode_t mode = terminal);
+```
+
+The second form is needed to call a command function directly:
+
+```cpp
+CliStream stream(&Serial);
+cmd_hello(stream, nullptr, 0);
+```
+
+### begin()
+
+```cpp
+void begin(Stream *pParent, mode_t mode = terminal);
+```
+
+Attaches the stream to a parent and resets its state. In telnet mode the
+negotiation of character mode is sent to the client. `Cli::setStream()` calls
+it, there is usually no need to call it directly.
+
+### parent()
+
+```cpp
+Stream *parent(void) const;
+```
+
+**Returns:** The wrapped stream, `nullptr` if detached.
+
+### getMode()
+
+```cpp
+mode_t getMode(void) const;
+```
+
+**Returns:** The protocol spoken on the parent stream.
+
 ## Command Function Signature
 
 All commands must follow this signature:
 
 ```cpp
-int8_t cmd_<name>(Stream& ioStream, const char *argv[], uint8_t argc)
+int8_t cmd_<name>(CliStream& ioStream, const char *argv[], uint8_t argc)
 ```
 
 **Parameters:**
 
 ### ioStream
-Reference to the I/O stream for input/output operations.
+Reference to the I/O stream for input/output operations. It is a
+[CliStream](#clistream-class), which is a `Stream`, so it is used like any
+other stream and can be passed to functions taking a `Stream&`.
+
+A command reading input from `ioStream`, e.g. asking for a password or waiting
+for a key, only ever sees a single CR for the Enter key. The stream the CLI
+runs on is available by `ioStream.parent()`.
 
 **Usage:**
 ```cpp
 ioStream.printf("Output: %d\n", value);
 ioStream.println("Hello");
 ioStream.write(buffer, length);
+
+if (ioStream.parent() == &Serial) {
+    // The command runs on the serial console
+}
 ```
 
 ### argv

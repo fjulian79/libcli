@@ -6,11 +6,11 @@
  *
  *      telnet <ip address>
  *
- * It shows how to use libcli with any other stream:
- *  - cli.setStream() selects where libcli writes to.
- *  - cli.read() hands a single received byte to libcli, so the input can be
- *    filtered before. This is used here to remove the telnet protocol bytes,
- *    which are no user input.
+ * It shows how to use libcli with a telnet client: cli.setStream() with
+ * CliStream::telnet makes libcli handle the telnet protocol. It switches the
+ * client to character mode, so the cursor keys, the command history and the
+ * tab completion work as on Serial, removes the telnet commands from the input
+ * and sends a new line as "\r\n". See doc/line-endings.md for the details.
  *
  * ATTENTION: Telnet is not encrypted and there is no password, anybody in
  * your network can connect. Only use it in trusted networks.
@@ -38,146 +38,8 @@ WiFiClient client;
 
 bool clientConnected = false;
 
-/**
- * Telnet expects "\r\n" as line end, libcli writes "\n". This stream adds the
- * missing "\r" when writing to the client and passes everything else through.
- */
-class TelnetStream : public Stream
-{
-    public:
-
-        size_t write(uint8_t c) override
-        {
-            return write(&c, 1);
-        }
-
-        size_t write(const uint8_t *buffer, size_t size) override
-        {
-            size_t start = 0;
-
-            /* Write the data in chunks, as each write may send a TCP packet */
-            for (size_t i = 0; i < size; i++)
-            {
-                if (buffer[i] == '\n')
-                {
-                    client.write(&buffer[start], i - start);
-                    client.write((const uint8_t *) "\r\n", 2);
-                    start = i + 1;
-                }
-            }
-
-            client.write(&buffer[start], size - start);
-            return size;
-        }
-
-        int available() override
-        {
-            return client.available();
-        }
-
-        int read() override
-        {
-            return client.read();
-        }
-
-        int peek() override
-        {
-            return client.peek();
-        }
-
-        void flush() override
-        {
-            client.flush();
-        }
-};
-
-TelnetStream telnetStream;
-
-/**
- * The telnet protocol, see RFC 854. Commands start with IAC, option
- * negotiation is followed by one option byte, subnegotiation ends with IAC SE.
- */
-const uint8_t IAC = 255;
-const uint8_t DONT = 254;
-const uint8_t DO = 253;
-const uint8_t WONT = 252;
-const uint8_t WILL = 251;
-const uint8_t SB = 250;
-const uint8_t SE = 240;
-const uint8_t OPT_ECHO = 1;
-const uint8_t OPT_SUPPRESS_GO_AHEAD = 3;
-
-enum
-{
-    tn_data,
-    tn_command,
-    tn_option,
-    tn_subneg,
-    tn_subneg_iac
-}
-telnetState = tn_data;
-
-/**
- * Removes the telnet protocol bytes and passes the user input to libcli.
- */
-void telnetInput(uint8_t byte)
-{
-    switch (telnetState)
-    {
-        case tn_data:
-            if (byte == IAC)
-            {
-                telnetState = tn_command;
-            }
-            else
-            {
-                cli.read(byte);
-            }
-            break;
-
-        case tn_command:
-            if (byte == SB)
-            {
-                telnetState = tn_subneg;
-            }
-            else if (byte >= WILL && byte <= DONT)
-            {
-                telnetState = tn_option;
-            }
-            else
-            {
-                /* Any other command, or an escaped 255, which is no valid
-                 * input for a CLI anyway */
-                telnetState = tn_data;
-            }
-            break;
-
-        case tn_option:
-            telnetState = tn_data;
-            break;
-
-        case tn_subneg:
-            if (byte == IAC)
-            {
-                telnetState = tn_subneg_iac;
-            }
-            break;
-
-        case tn_subneg_iac:
-            telnetState = (byte == SE) ? tn_data : tn_subneg;
-            break;
-    }
-}
-
 void checkClient()
 {
-    /* The server echoes the input and the client sends every character
-     * immediately instead of whole lines, as libcli expects it */
-    const uint8_t negotiation[] = {
-        IAC, WILL, OPT_ECHO,
-        IAC, WILL, OPT_SUPPRESS_GO_AHEAD
-    };
-
     if (clientConnected && !client.connected())
     {
         client.stop();
@@ -194,15 +56,13 @@ void checkClient()
         {
             client = newClient;
             clientConnected = true;
-            telnetState = tn_data;
-            client.write(negotiation, sizeof(negotiation));
 
             Serial.printf("Telnet client connected: %s\n",
                 client.remoteIP().toString().c_str());
             Serial.println("The CLI is available via telnet only now");
 
-            telnetStream.printf("Welcome to libcli via telnet\n");
-            cli.setStream(&telnetStream);
+            client.print("Welcome to libcli via telnet\r\n");
+            cli.setStream(&client, CliStream::telnet);
         }
     }
 }
@@ -260,16 +120,5 @@ void setup()
 void loop()
 {
     checkClient();
-
-    if (clientConnected)
-    {
-        while (client.available())
-        {
-            telnetInput(client.read());
-        }
-    }
-    else
-    {
-        cli.loop();
-    }
+    cli.loop();
 }

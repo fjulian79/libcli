@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `CliStream`, the stream libCli and its commands use for io. It wraps the stream given to `begin()` or `setStream()` and acts as line discipline on the input side: CR LF and CR NUL are read as a single CR, whenever the second byte arrives, and NUL is dropped. A command reading input itself, e.g. a password or a key to abort, no longer receives the second byte of Enter
+- Telnet mode, `begin(&client, CliStream::telnet)` respectively `setStream(&client, CliStream::telnet)`. libCli negotiates character mode with the client, so the cursor keys, the command history and the tab completion work, removes and answers the telnet commands of the client, enables its echo and sends a new line as CR LF. The telnet example shrinks to the connection handling
+- `CliStream::parent()` returns the stream the CLI runs on, e.g. to tell which console a command runs on or to transfer binary data unfiltered
+- `CliCommand::exec()` taking a `CliStream`, a command executing another one passes its `ioStream` on
+- `setStream(nullptr)` detaches the CLI
+- `Cli::getStream()` returns the `CliStream` the commands get, e.g. to print a welcome message with the same translation
+
+### Changed
+- **Breaking:** Commands get a `CliStream&` instead of a `Stream&` as `ioStream`. Commands defined by `CLI_COMMAND` compile unchanged, `CliStream` is a `Stream`. Command functions written or registered without the macro need the new signature, and a command function called directly needs a `CliStream`, e.g. `CliStream stream(&Serial); cmd_hello(stream, nullptr, 0);`
+- `CliCommand::exec()` called with any other stream, e.g. `Serial`, wraps it by a `CliStream` in terminal mode
+- `ioStream.available()` returns 1 while data is available instead of the number of bytes, the `CliStream` does not buffer data
+
 ## [4.8.1] - 2026-10-29
 
 ### Added

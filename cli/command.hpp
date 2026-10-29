@@ -21,6 +21,7 @@
 #include "cli_config.hpp"
 #endif
 #include "cli/config.hpp"
+#include "cli/stream.hpp"
 
 /**
  * @brief Used to mark the parameters of a command function as possibly unused,
@@ -33,7 +34,7 @@
  */
 #define CLI_COMMAND_DEF(_name)                                      \
                                                                     \
-    int8_t cmd_ ## _name (Stream& ioStream CLI_UNUSED,              \
+    int8_t cmd_ ## _name (CliStream& ioStream CLI_UNUSED,           \
         const char *argv[] CLI_UNUSED, uint8_t argc CLI_UNUSED)
 
 /**
@@ -48,7 +49,7 @@
 /**
  * @brief Defines a libcli command function pointer.
  */
-typedef int8_t (*CmdFuncPtr)(Stream& ioStream, const char *argv[],
+typedef int8_t (*CmdFuncPtr)(CliStream& ioStream, const char *argv[],
     uint8_t argc);
 
 /**
@@ -115,14 +116,26 @@ class CliCommand {
         /**
          * @brief Used to execute a command by its name.
          *
+         * The command gets a CliStream wrapping the given stream in terminal
+         * mode as ioStream, its parent() is ioStream.
+         *
          * @param ioStream The stream to use for io operations.
          * @param name The name of the command to execute.
          * @param argv The arguments of the command.
          * @param argc The number of arguments.
          *
-         * @return The return value of the command.
+         * @return The return value of the command, -1 if it does not exist.
          */
         static int8_t exec(Stream& ioStream, const char* name,
+            const char* argv[], uint8_t argc);
+
+        /**
+         * @brief Used to execute a command by its name from within a command.
+         *
+         * The command gets the given ioStream as it is, e.g. the one of the
+         * calling command.
+         */
+        static int8_t exec(CliStream& ioStream, const char* name,
             const char* argv[], uint8_t argc);
 
     private:

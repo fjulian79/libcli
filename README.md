@@ -10,6 +10,8 @@
   - Cross-platform compatible: works on all Arduino platforms
   - See [Command Registration](doc/command-registration.md) for how it works
 - **Stream-Based I/O** - Works with any Arduino Stream (Serial, Telnet, WebSocket, etc.)
+- **Line Endings Handled** - CR, CR LF and CR NUL all work as Enter, also for commands reading input themselves, see [Line Endings](doc/line-endings.md)
+- **Built-in Telnet Support** - Character mode, cursor keys, history and tab completion via telnet, just pass the client
 - **Low Memory Footprint** - Configurable buffer sizes, ~400 bytes RAM with defaults
 - **Simple Integration** - Just `cli.begin()` and `cli.loop()` in your sketch
 
@@ -175,10 +177,12 @@ void loop() {
 
 All commands follow this signature:
 ```cpp
-int8_t cmd_<name>(Stream& ioStream, const char *argv[], uint8_t argc)
+int8_t cmd_<name>(CliStream& ioStream, const char *argv[], uint8_t argc)
 ```
 
-- **ioStream** - Use for all I/O operations (`printf`, `println`, etc.)
+- **ioStream** - Use for all I/O operations (`printf`, `println`, etc.). It
+  is a `CliStream` wrapping the stream the CLI runs on, which is available by
+  `ioStream.parent()`. See [api.md](doc/api.md#clistream-class) for details.
 - **argv** - Array of arguments, `argv[0]` is the first argument *after* the
   command name, not the command name itself. Unlike Unix `main(argc, argv)`,
   the name is deliberately excluded - it's already known statically via
@@ -236,18 +240,17 @@ For complete configuration documentation, see [configuration.md](doc/configurati
 | [arguments](examples/arguments/arguments.ino) | Quoted strings, parsing numbers, validating arguments and returning errors |
 | [blink](examples/blink/blink.ino) | Controlling hardware while `loop()` keeps doing other work, without `delay()` |
 | [exec](examples/exec/exec.ino) | Executing commands from code, e.g. at startup or for commands received via MQTT |
-| [telnet](examples/telnet/telnet.ino) | Using the CLI via WiFi and telnet with a custom stream (ESP32, ESP8266, Pico W) |
+| [telnet](examples/telnet/telnet.ino) | Using the CLI via WiFi and telnet (ESP32, ESP8266, Pico W) |
 
 ## Advanced Usage
 
 ### Using Different Streams
 
 ```cpp
-// Telnet stream
-TelnetStream telnet;
-cli.begin(&telnet);
+// A telnet client accepted by a WiFiServer, libCli handles the protocol
+cli.setStream(&client, CliStream::telnet);
 
-// Switch streams at runtime
+// Switch back at runtime, e.g. when the client disconnects
 cli.setStream(&Serial);
 ```
 

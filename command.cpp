@@ -78,6 +78,13 @@ CmdFuncPtr CliCommand::getCmd(const char* name) {
 
 int8_t CliCommand::exec(Stream& ioStream, const char* name, const char* argv[],
                         uint8_t argc) {
+    CliStream stream(&ioStream);
+
+    return exec(stream, name, argv, argc);
+}
+
+int8_t CliCommand::exec(CliStream& ioStream, const char* name,
+                        const char* argv[], uint8_t argc) {
     CmdFuncPtr pFunc = getCmd(name);
 
     if (pFunc != nullptr) {

@@ -77,13 +77,13 @@ The macro expands to:
 
 ```cpp
 // 1. Forward declaration
-int8_t cmd_help(Stream& ioStream, const char *argv[], uint8_t argc);
+int8_t cmd_help(CliStream& ioStream, const char *argv[], uint8_t argc);
 
 // 2. Static registrar object (this is the magic!)
 static CliCommand help_registrar("help", cmd_help);
 
 // 3. Actual function definition
-int8_t cmd_help(Stream& ioStream, const char *argv[], uint8_t argc) {
+int8_t cmd_help(CliStream& ioStream, const char *argv[], uint8_t argc) {
     ioStream.println("Available commands...");
     return 0;
 }
@@ -138,19 +138,19 @@ Expanding `CLI_COMMAND_DEF`:
 
 ```cpp
 #define CLI_COMMAND_DEF(_name) \
-    int8_t cmd_ ## _name (Stream& ioStream, const char *argv[], uint8_t argc)
+    int8_t cmd_ ## _name (CliStream& ioStream, const char *argv[], uint8_t argc)
 ```
 
 So the full expansion is:
 ```cpp
 // Forward declaration (ends with semicolon)
-int8_t cmd_help(Stream& ioStream, const char *argv[], uint8_t argc);
+int8_t cmd_help(CliStream& ioStream, const char *argv[], uint8_t argc);
 
 // Static registrar
 static CliCommand help_registrar("help", cmd_help);
 
 // Function definition (you add the body)
-int8_t cmd_help(Stream& ioStream, const char *argv[], uint8_t argc)
+int8_t cmd_help(CliStream& ioStream, const char *argv[], uint8_t argc)
 {
     // Your code here
 }
@@ -283,9 +283,9 @@ CLI_COMMAND(led) {
 
 **After preprocessor expansion:**
 ```cpp
-int8_t cmd_led(Stream& ioStream, const char *argv[], uint8_t argc);
+int8_t cmd_led(CliStream& ioStream, const char *argv[], uint8_t argc);
 static CliCommand led_registrar("led", cmd_led);
-int8_t cmd_led(Stream& ioStream, const char *argv[], uint8_t argc) {
+int8_t cmd_led(CliStream& ioStream, const char *argv[], uint8_t argc) {
     if (argc < 1) return -1;
     digitalWrite(LED_BUILTIN, atoi(argv[0]));
     return 0;

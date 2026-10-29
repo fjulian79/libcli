@@ -35,6 +35,10 @@ Cli::Cli()
 }
 
 void Cli::begin(Stream *pIoStr, bool sortCmdTab) {
+    begin(pIoStr, CliStream::terminal, sortCmdTab);
+}
+
+void Cli::begin(Stream *pIoStr, CliStream::mode_t mode, bool sortCmdTab) {
     BufIdx = 0;
     pCmdTab = CliCommand::getTable();
     CmdTabSiz = CliCommand::getCmdCnt();
@@ -49,12 +53,27 @@ void Cli::begin(Stream *pIoStr, bool sortCmdTab) {
         CliCommand::sortTable();
     }
 
-    setStream(pIoStr);
+    setStream(pIoStr, mode);
 }
 
-void Cli::setStream(Stream *pIoStr) {
-    pStream = pIoStr;
+void Cli::setStream(Stream *pIoStr, CliStream::mode_t mode) {
+    IoStream.begin(pIoStr, mode);
+
+    if (pIoStr == nullptr) {
+        pStream = nullptr;
+        return;
+    }
+
+    pStream = &IoStream;
+    if (mode == CliStream::telnet) {
+        /* The client has been told that the server echoes */
+        EchoEnabled = true;
+    }
     reset();
+}
+
+CliStream *Cli::getStream(void) {
+    return pStream;
 }
 
 int8_t Cli::loop(void) {
