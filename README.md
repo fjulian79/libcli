@@ -8,7 +8,7 @@
 - **Automatic Command Registration** - Define commands with `CLI_COMMAND(name)` macro, no manual table management
   - Preprocessor-aware: only compiled code gets registered
   - Cross-platform compatible: works on all Arduino platforms
-  - See [Command Registration](doc/COMMAND_REGISTRATION.md) for how it works
+  - See [Command Registration](doc/command-registration.md) for how it works
 - **Stream-Based I/O** - Works with any Arduino Stream (Serial, Telnet, WebSocket, etc.)
 - **Low Memory Footprint** - Configurable buffer sizes, ~400 bytes RAM with defaults
 - **Simple Integration** - Just `cli.begin()` and `cli.loop()` in your sketch
@@ -44,7 +44,7 @@
 ### Configuration
 - **Header-Based Config** - Override defaults via `cli_config.hpp`
 - **Build Flag Config** - Or configure directly in `platformio.ini`
-- **Fully Documented** - See [CONFIGURATION.md](doc/CONFIGURATION.md) for all options
+- **Fully Documented** - See [configuration.md](doc/configuration.md) for all options
 
 ## Design Principles
 
@@ -95,7 +95,7 @@ libCli requires an Arduino core whose `Print` class provides `printf()`, which i
 
 Unlike Python script-based solutions that scan source code, libCli's registration respects the preprocessor. Disabled code is never registered, and the system works identically across different toolchains without requiring linker script modifications.
 
-For a detailed explanation of why this design was chosen and how it works, see [Command Registration](doc/COMMAND_REGISTRATION.md).
+For a detailed explanation of why this design was chosen and how it works, see [Command Registration](doc/command-registration.md).
 
 ### Stream-Based Architecture
 
@@ -116,10 +116,10 @@ The demo runs on multiple platforms (see `platformio.ini` in the demo repository
 
 ## Documentation
 
-- **[API Reference](doc/API.md)** - Complete API documentation for all classes and methods
-- **[Configuration Guide](doc/CONFIGURATION.md)** - Detailed configuration options and memory considerations
-- **[Command Registration](doc/COMMAND_REGISTRATION.md)** - How automatic command registration works and why
-- **[Line Endings](doc/LINE_ENDINGS.md)** - CR, LF, terminals, Linux and Telnet, and which settings work
+- **[API Reference](doc/api.md)** - Complete API documentation for all classes and methods
+- **[Configuration Guide](doc/configuration.md)** - Detailed configuration options and memory considerations
+- **[Command Registration](doc/command-registration.md)** - How automatic command registration works and why
+- **[Line Endings](doc/line-endings.md)** - CR, LF, terminals, Linux and Telnet, and which settings work
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ## Quick Start
@@ -184,11 +184,11 @@ int8_t cmd_<name>(Stream& ioStream, const char *argv[], uint8_t argc)
   command name, not the command name itself. Unlike Unix `main(argc, argv)`,
   the name is deliberately excluded - it's already known statically via
   `CLI_COMMAND(name)`, so repeating it would waste a `CLI_ARGVSIZ` slot for
-  no benefit. See [API.md](doc/API.md#argv) for details.
+  no benefit. See [api.md](doc/api.md#argv) for details.
 - **argc** - Number of arguments, excluding the command name
 - **return** - 0 for success, negative for errors
 
-See [API.md](doc/API.md) for complete details.
+See [api.md](doc/api.md) for complete details.
 
 ## Configuration
 
@@ -227,7 +227,7 @@ build_flags = -Icfg  # Path to your cli_config.hpp
 | `CLI_TAB_COMPLETION` | 1 | Enable tab completion (0=off) |
 | `CLI_TERMINAL_WIDTH` | 80 | Terminal width for wrapping |
 
-For complete configuration documentation, see [CONFIGURATION.md](doc/CONFIGURATION.md).
+For complete configuration documentation, see [configuration.md](doc/configuration.md).
 
 ## Examples
 
@@ -285,7 +285,7 @@ void setup() {
 }
 ```
 
-For more examples and detailed API usage, see [API.md](doc/API.md).
+For more examples and detailed API usage, see [api.md](doc/api.md).
 
 ## Tests
 

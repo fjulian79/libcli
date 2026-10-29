@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.8.1] - 2026-10-29
 
 ### Added
-- Documentation on line endings in `doc/LINE_ENDINGS.md`: what the Enter key sends, what the Linux tty layer does, how picocom, the PlatformIO monitor and Telnet handle CR and LF, and which settings work with libCli
+- Documentation on line endings in `doc/line-endings.md`: what the Enter key sends, what the Linux tty layer does, how picocom, the PlatformIO monitor and Telnet handle CR and LF, and which settings work with libCli
 
 ### Fixed
 - `clearLine()` used a carriage return to move the cursor to the first column. Terminals mapping a received CR to LF, e.g. the PlatformIO monitor with `monitor_eol = CR`, printed each step through the command history and each Ctrl+K on a new line. The cursor is moved by an escape sequence (CUB) instead. This affected all versions since 4.3.0, the earlier history did not clear the line
